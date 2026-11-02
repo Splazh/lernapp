@@ -11,7 +11,7 @@
     if (!S.tests) {
       S.tests = [
         { id: newId(), subj: 'englisch', seed: true, title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
-          decks: ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },
+          decks: ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },
         { id: newId(), subj: 'englisch', title: 'Englisch Test', date: '2026-11-11', stoff: '', decks: [] },
         { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-27', stoff: '', decks: [] }
       ];
@@ -20,7 +20,7 @@
   }
   const tests = () => (S.tests = S.tests || []);
   // Neue Wortschatz-Themen auch in den schon gespeicherten Check-Up aufnehmen.
-  (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
+  (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
 
   // ---------- Datum ----------
   const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];

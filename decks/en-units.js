@@ -40,4 +40,13 @@
     ['Nachkommen', 'descendants'], ['Großfamilie (mit Großeltern und weiteren Verwandten)', 'extended family'], ['die Scheidung einreichen', 'apply for a divorce'],
     ['einen eigenen Haushalt gründen', "set up one's own household"], ['Urgroßmutter', 'great-grandmother'], ['Urgroßeltern', 'great-grandparents'], ['Großonkel', 'great-uncle']
   ]);
+
+  add('en-unit2-test', 'Extra und Test yourself (Topic 1)', '📝', [
+    ['Mehrgenerationen-, mehrere Generationen betreffend', 'multigenerational'], ['Einstellung, Haltung', 'attitude'], ['Beschwerde, Meckerei', 'gripe'], ['entspannt, gelassen', 'laid back'],
+    ['zueinander passend, verträglich', 'compatible'], ['beitragen', 'contribute'], ['Rechnungen', 'bills'], ['Arbeitsteilung', 'division of labour'], ['Vereinbarung, Regelung', 'arrangement'],
+    ['auf gutem Fuß miteinander', 'on friendly terms'], ['den Sprung wagen, den Schritt tun', 'take the plunge'], ['Finanzen', 'finances'],
+    ['Cybermobbing', 'cyberbullying'], ['zum Opfer machen, schikanieren', 'victimize'], ['klischeehaft, typisch', 'stereotypical'], ['absichtlich', 'deliberately'],
+    ['sich entschuldigen', 'apologize'], ['etwas ertragen, sich mit etwas abfinden', 'put up with'], ['dazupassen, sich einfügen', 'fit in'], ['Beratungslehrer(in), Berater(in)', 'counsellor'],
+    ['Mentor(in)', 'mentor'], ['Ratgeber(in), Führer(in)', 'guide'], ['Reparaturen', 'repairs'], ['respektiert', 'respected']
+  ]);
 })();
