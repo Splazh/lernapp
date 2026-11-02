@@ -146,6 +146,18 @@ window.ORDERS = {
    "e": "PQ4R: erst Überblick, dann Fragen, lesen, verstehen, in eigenen Worten wiedergeben und zum Schluss wiederholen."
   }
  ],
+ "de-faelle": [
+  {
+   "t": "Ordne die vier Fälle nach ihrer Nummer (1. bis 4. Fall).",
+   "items": [
+    "Nominativ (Wer oder was?)",
+    "Genitiv (Wessen?)",
+    "Dativ (Wem?)",
+    "Akkusativ (Wen oder was?)"
+   ],
+   "e": "1. Nominativ, 2. Genitiv, 3. Dativ, 4. Akkusativ."
+  }
+ ],
  "geo-atmosphaere": [
   {
    "t": "Ordne die Schichten der Atmosphäre von unten nach oben.",

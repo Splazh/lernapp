@@ -2,7 +2,7 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 20 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 21 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
@@ -213,7 +213,7 @@
   const filled = (d, c) => { const s = sentence(d, c); return s ? s.replace('___', splitVar(c.a[0])[0]) : null; };
   // Erklärung zu einer Karte. Gibt es nichts Passendes, bleibt die Liste leer.
   function explainLines(d, c) {
-    const b = base(d), out = [], own = ((window.EXPL || {})[b.id] || {})[c.a[0]] || c.e;
+    const b = base(d), out = [], ex = (window.EXPL || {})[b.id] || {}, own = ex[c.q] || ex[c.a[0]] || c.e;   // erst nach Frage, dann nach Antwort suchen
     if (own) out.push(own);
     const tense = !own && DECKS.find(x => x.title === c.a[0] && x.info && x.info.kurz);   // "Zeitform erkennen": Antwort ist der Name einer Zeitform
     if (tense) out.push(tense.info.kurz + (tense.info.signals ? ' Signalwörter: ' + tense.info.signals : ''));
