@@ -8,7 +8,8 @@
   // Beim ersten Start: die drei bekannten Termine, damit Lana nicht bei null anfängt.
   if (!S.seeded) {
     S.seeded = true;
-    if (!S.tests) {
+    // Die drei Starttermine gibt es nur für Lana. Wer die App weitergegeben bekommt, startet mit einer leeren Liste.
+    if (!S.tests && S.name === 'Lana') {
       S.tests = [
         { id: newId(), subj: 'englisch', seed: true, title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
           decks: ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },

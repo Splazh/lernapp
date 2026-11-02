@@ -11,11 +11,13 @@
   const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: {}, day: null, week: null, maxStreak: 0 });
   const S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem('lernapp') || '{}')); } catch (e) { /* leer starten */ }
+  // Bestehende Nutzerin (vor der Namensfrage): Name Lana übernehmen. Neue Nutzer werden beim Start nach ihrem Namen gefragt.
+  if (!S.name && (S.xp > 0 || S.last || (S.tests || []).length)) S.name = 'Lana';
   const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; };
   applyTheme();
   const save = () => { try { localStorage.setItem('lernapp', JSON.stringify(S)); } catch (e) { /* ignorieren */ } };
   // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
-  const reset = () => { const keep = { theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
+  const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
 
   // ---------- Helfer ----------
   function h(tag, attrs, ...kids) {

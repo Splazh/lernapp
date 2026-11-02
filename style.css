@@ -191,7 +191,7 @@ body:not([data-tab]) #tabs, body[data-tab=""] #tabs { display: none; }
 .field .chips.scroll { margin: 0 -18px; }
 .chipb { flex: none; border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap; transition: border-color .15s, background .15s; }
 .chipb.on { border-color: var(--c, var(--pri)); background: color-mix(in srgb, var(--c, var(--pri)) 13%, var(--surface)); }
-.field input[type="date"], .field textarea { width: 100%; font: 600 18px var(--font); color: var(--ink); background: var(--surface); padding: 14px 16px; border-radius: 16px; border: 2px solid var(--line); outline: none; }
+.field input[type="date"], .field input[type="text"], .field textarea { width: 100%; font: 600 18px var(--font); color: var(--ink); background: var(--surface); padding: 14px 16px; border-radius: 16px; border: 2px solid var(--line); outline: none; }
 .field textarea { font-weight: 500; font-size: 17px; line-height: 1.5; resize: vertical; min-height: 120px; }
 .field input[type="date"]:focus, .field textarea:focus { border-color: var(--pri); }
 .pickrow { width: 100%; border: 2px solid var(--line); background: var(--surface); border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; text-align: left; font-weight: 700; font-size: 15px; }
@@ -230,6 +230,10 @@ body:not([data-tab]) #tabs, body[data-tab=""] #tabs { display: none; }
 .agroup .badges { margin-top: 0; }
 @keyframes drop { from { transform: translateY(-30px); opacity: 0; } }
 @keyframes pulse { 50% { transform: scale(1.06); } }
+
+.welcome { display: grid; gap: 14px; justify-items: stretch; padding-top: 12vh; text-align: center; }
+.welcome .field { text-align: left; } .welcome .cta { margin-top: 6px; }
+.wlogo { width: 92px; height: 92px; margin: 0 auto; border-radius: 28px; background: linear-gradient(135deg, #5B3CF0, var(--pri-2)); display: grid; place-items: center; font-size: 46px; box-shadow: 0 16px 32px color-mix(in srgb, var(--pri) 35%, transparent); }
 
 /* Ringe */
 .ring { display: block; } .ring-bg { stroke: var(--line); } .ring-fg { stroke: var(--pri); transition: stroke-dashoffset 1s cubic-bezier(.22, 1, .36, 1); }

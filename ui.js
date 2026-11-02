@@ -5,7 +5,7 @@
   const { h, svg, S, save, go, bar, backBtn, tileIco, head, base, cardsOf, decksOf, subjectOf, wrongDeck, wrongCount, mastered, deckPct, subjectStats,
     levelInfo, streakNow, view, DECKS, SUBJECTS } = LA;
   const ui = LA.ui;
-  const NAME = 'Lana';
+  const nm = () => S.name || 'Lana';
 
   // ---------- Tab-Leiste ----------
   const TABS = [['learn', 'Lernen', 'home'], ['plan', 'Termine', 'calendar'], ['practice', 'Üben', 'target'], ['notes', 'Notizen', 'note'], ['profile', 'Profil', 'user']];
@@ -15,7 +15,7 @@
   ui.markTab = tab => nav.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
 
   // ---------- Kleine Bausteine ----------
-  const avatar = cls => h('div', { class: 'avatar ' + (cls || ''), 'aria-hidden': 'true' }, NAME[0]);
+  const avatar = cls => h('div', { class: 'avatar ' + (cls || ''), 'aria-hidden': 'true' }, nm()[0].toUpperCase());
   const answersTotal = () => {
     let seen = 0, right = 0, ok = 0;
     for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (c.box >= 3) ok++; }
@@ -29,7 +29,7 @@
     const d = pickDeck(), sub = subjectOf(d), recent = !!(S.recent || []).length, lv = levelInfo();
     const hero = h('section', { class: 'hero' },
       h('div', { class: 'hero-txt' },
-        h('span', { class: 'hero-kick' }, recent ? 'Zuletzt geübt' : 'Gleich dran: Check-Up Englisch'),
+        h('span', { class: 'hero-kick' }, recent ? 'Zuletzt geübt' : 'Dein Einstieg'),
         h('h2', null, d.title), h('p', null, sub.title + ' · ' + deckPct(d) + ' % sicher'),
         h('button', { class: 'cta light', type: 'button', onclick: () => startDeck(d) }, recent ? 'Weiter' : 'Los geht\'s')),
       h('div', { class: 'hero-ring' }, LA.ring(deckPct(d), { size: 92, stroke: 9 }), h('b', null, deckPct(d) + '%')));
@@ -49,7 +49,7 @@
       ['grid', 'list'].map(k => h('button', { type: 'button', 'aria-label': k === 'grid' ? 'Kacheln' : 'Liste', class: S.layout === k ? 'on' : '',
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
-      h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + NAME + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
+      h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
       hero, ui.nextTest ? ui.nextTest() : '', ui.questCard ? ui.questCard() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
@@ -176,6 +176,13 @@
     });
     return s;
   }
+  // Jede Person hat auf ihrem Handy ihren eigenen Stand. Geteilt wird nur der Link.
+  function shareApp() {
+    const url = location.href.split('#')[0].replace(/index\.html$/, '');
+    const text = 'Probier die Lernapp aus: Karteikarten, Spiele und Ziele für alle Fächer.';
+    if (navigator.share) navigator.share({ title: 'Lernapp', text, url }).catch(() => { /* abgebrochen */ });
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => LA.toast('🔗', 'Link kopiert', url));
+  }
   let sure = false;
   function profile() {
     const t = answersTotal(), lv = levelInfo(), items = SUBJECTS.map(s => ({ s, st: subjectStats(s) }));
@@ -187,10 +194,12 @@
       sure = false; LA.reset(); go(profile, 'profile');
     } }, 'Fortschritt zurücksetzen');
     view.append(
-      h('header', { class: 'pro' }, avatar('xl'), h('h1', null, NAME), h('span', { class: 'chip' }, 'Level ' + lv.lvl + ' · ' + lv.title)),
+      h('header', { class: 'pro' }, avatar('xl'), h('h1', null, nm()), h('span', { class: 'chip' }, 'Level ' + lv.lvl + ' · ' + lv.title)),
       h('section', { class: 'card' }, h('div', { class: 'donutwrap' }, donut(items.map(x => ({ color: x.s.color, pct: x.st.pct }))),
         h('div', { class: 'ringtxt' }, h('b', null, allPct + '%'), h('small', null, 'sicher gelernt'))),
         h('div', { class: 'legend' }, items.map(x => h('div', { class: 'lg', style: '--c:' + x.s.color }, h('i', null), h('span', null, x.s.title), h('b', null, x.st.decks ? x.st.pct + ' %' : '–'))))),
+      h('label', { class: 'field', style: 'margin-top:16px' }, h('span', null, 'Dein Name'),
+        h('input', { type: 'text', value: nm(), maxlength: 24, autocomplete: 'off', onchange: e => { const v = e.target.value.trim(); if (v) { S.name = v; save(); go(profile, 'profile'); } else e.target.value = nm(); } })),
       h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: () => go(() => ui.awards('profile'), 'profile') },
         tileIco('🏆'), h('span', { class: 'grow' }, 'Erfolge', h('small', null, 'Abzeichen und Level')), svg('chevron', 'chev')),
       h('div', { class: 'stats3 four' }, stat(streakNow(), 'Tage Serie'), stat(t.ok, 'Karten sicher'), stat(t.seen, 'Antworten'), stat(acc + ' %', 'Trefferquote')),
@@ -199,11 +208,27 @@
           S.theme = k; save(); LA.applyTheme();
           e.currentTarget.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on');
         } }, l))),
+      h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: shareApp }, tileIco('💌'), h('span', { class: 'grow' }, 'App weitergeben', h('small', null, 'Link an eine Freundin schicken')), svg('chevron', 'chev')),
       resetBtn);
   }
 
-  Object.assign(ui, { home, subject, wrong, deck, info, practice, profile });
-  go(home, 'learn');
+  // ---------- Willkommen (erster Start) ----------
+  function welcome() {
+    const input = h('input', { type: 'text', placeholder: 'Dein Vorname', maxlength: 24, autocomplete: 'given-name', 'aria-label': 'Dein Name' });
+    const err = h('p', { class: 'formerr', role: 'alert' });
+    const form = h('form', { class: 'welcome', onsubmit: e => {
+      e.preventDefault();
+      const v = input.value.trim();
+      if (!v) { err.textContent = 'Wie soll ich dich nennen?'; input.focus(); return; }
+      S.name = v; S.seeded = true; save(); go(home, 'learn');
+    } }, h('div', { class: 'wlogo' }, '🎓'), h('h1', null, 'Willkommen!'),
+      h('p', { class: 'lead' }, 'Lernen mit Karteikarten, Spielen und Tagesaufgaben. Alle Fächer an einem Ort. Wie heißt du?'),
+      h('label', { class: 'field' }, h('span', null, 'Name'), input), err, h('button', { class: 'cta', type: 'submit' }, "Los geht's"));
+    view.append(form);
+  }
+
+  Object.assign(ui, { welcome, home, subject, wrong, deck, info, practice, profile });
+  if (S.name) go(home, 'learn'); else go(welcome);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* offline-Modus optional */ });
   }
