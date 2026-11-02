@@ -156,6 +156,17 @@ window.ORDERS = {
     "Thermosphäre"
    ],
    "e": "Von unten: Troposphäre (Wetter), Stratosphäre (Ozonschicht), Mesosphäre, Thermosphäre."
+  },
+  {
+   "t": "Wie entstehen Wolken? Bringe die Schritte in die richtige Reihenfolge.",
+   "items": [
+    "Luft wird erwärmt und steigt auf",
+    "Beim Aufsteigen kühlt sie ab",
+    "Kalte Luft kann weniger Wasserdampf halten",
+    "Der Wasserdampf kondensiert",
+    "Es entstehen Wolken"
+   ],
+   "e": "Aufsteigende Luft kühlt ab, kann weniger Wasserdampf halten, der Dampf kondensiert zu Tröpfchen: Wolken."
   }
  ],
  "geo-geologie": [
@@ -167,6 +178,30 @@ window.ORDERS = {
     "Erdkruste"
    ],
    "e": "Innen der feste Kern aus Eisen, dann der zähflüssige Mantel, außen die feste Kruste."
+  },
+  {
+   "t": "Bringe den Gesteinskreislauf in die richtige Reihenfolge.",
+   "items": [
+    "Magma kühlt ab (Magmatit)",
+    "Verwitterung und Abtragung",
+    "Sedimente lagern sich ab",
+    "Druck verfestigt sie (Sedimentgestein)",
+    "Hitze und Druck (Metamorphit)"
+   ],
+   "e": "Magma kühlt zu Magmatit, Verwitterung macht Sedimente, Druck macht Sedimentgestein, Hitze und Druck machen Metamorphit."
+  }
+ ],
+ "geo-zirkulation": [
+  {
+   "t": "Der Weg der Luft in der Hadley-Zelle: Bringe die Schritte in die richtige Reihenfolge.",
+   "items": [
+    "Luft steigt am Äquator auf",
+    "Sie kühlt ab und regnet ab (Regenwald)",
+    "In der Höhe strömt sie zu den Subtropen",
+    "Dort sinkt sie trocken ab (Wüsten)",
+    "Am Boden strömt sie als Passat zum Äquator zurück"
+   ],
+   "e": "Aufsteigen am Äquator, Abregnen, Höhenströmung, Absinken in den Subtropen, zurück als Passat."
   }
  ],
  "ma-zahlenmengen": [
