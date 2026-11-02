@@ -20,10 +20,11 @@
         h('small', null, (s ? s.title + ' · ' : '') + stamp(n.t)));
     };
     LA.view.append(
+      h('div', { class: 'topline' }, backBtn(() => go(() => ui.home(), 'learn'))),
       h('h1', { class: 'ttl' }, 'Notizen'), h('p', { class: 'lead' }, 'Eigene Zettel zu jedem Fach. Alles wird automatisch gespeichert.'),
       used.length > 1 || filter ? h('div', { class: 'chips scroll' }, chip('', 'Alle'), ...used.map(s => chip(s.id, s.icon + ' ' + s.title))) : '',
       shown.length ? h('div', { class: 'notes' }, shown.map(card)) : h('p', { class: 'empty' }, filter ? 'Noch keine Notiz in diesem Fach.' : 'Noch keine Notizen. Schreib dir auf, was du dir merken willst.'),
-      h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => go(() => edit(null, filter), 'notes') }, 'Neue Notiz')));
+      h('button', { class: 'fab', type: 'button', onclick: () => go(() => edit(null, filter)) }, '+ Neue Notiz'));
   }
 
   // Einzelne Notiz. Eine neue Notiz wird erst gespeichert, wenn etwas drinsteht.

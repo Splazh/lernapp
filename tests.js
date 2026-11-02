@@ -63,10 +63,11 @@
         svg('chevron', 'chev'));
     };
     view().append(
+      h('div', { class: 'topline' }, backBtn(() => go(() => ui.home(), 'learn'))),
       h('h1', { class: 'ttl' }, 'Testtermine'), h('p', { class: 'lead' }, 'Trag Tests samt Stoff ein und lerne gezielt dafür.'),
       up.length ? h('div', { class: 'list' }, up.map(row)) : h('p', { class: 'empty' }, 'Keine Tests anstehend. Tipp unten auf "Test eintragen".'),
       past.length ? head('Vergangen') : '', past.length ? h('div', { class: 'list dim' }, past.map(row)) : '',
-      h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => go(() => form(null), 'plan') }, 'Test eintragen')));
+      h('button', { class: 'fab', type: 'button', onclick: () => go(() => form(null)) }, '+ Test eintragen'));
   }
   const view = () => LA.view;
 

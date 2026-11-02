@@ -1,5 +1,5 @@
 // Offline-Cache: erst Netz (damit Updates ankommen), sonst Cache.
-const CACHE = 'lernapp-v14';
+const CACHE = 'lernapp-v15';
 const FILES = ['./', 'index.html', 'style.css', 'core.js', 'play.js', 'tests.js', 'notes.js', 'quests.js', 'backup.js', 'ui.js', 'manifest.webmanifest',
   'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'decks/subjects.js', 'decks/irregular-verbs.js',
   'decks/en-wortschatz.js', 'decks/en-units.js', 'decks/en-formate.js', 'decks/deutsch.js', 'decks/spanisch.js', 'decks/mathe.js',
