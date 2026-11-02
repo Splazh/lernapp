@@ -11,9 +11,10 @@
       'Bejahung: Grundform des Verbs. Bei he/she/it kommt ein -s dazu: I work, she works.',
       "Verneinung: do not (don't) / does not (doesn't) + Grundform: I don't work, she doesn't work.",
       'Frage: Do / Does + Person + Grundform: Do you work? Does she work?',
-      'Schreibung: go → goes, watch → watches, study → studies.'
+      'Schreibung: go → goes, watch → watches, study → studies.',
+      'Häufigkeitswörter stehen vor dem Verb, aber nach be: I often play football. I am often late.'
     ],
-    use: ['Gewohnheiten und Routinen: I get up at seven.', 'Allgemeine Wahrheiten: Water boils at 100 degrees.', 'Fahrpläne und feste Termine: The train leaves at 8.'],
+    use: ['Gewohnheiten und Routinen: I get up at seven.', 'Dauerhafte Situationen und Zustände: My uncle works at a cinema.', 'Allgemeine Wahrheiten: Water boils at 100 degrees.', 'Fahrpläne und feste Termine: The train leaves at 8.'],
     signals: 'always, usually, often, sometimes, never, every day, on Mondays',
     examples: [['She plays tennis every Sunday.', 'Sie spielt jeden Sonntag Tennis.'], ["He doesn't eat meat.", 'Er isst kein Fleisch.'], ['Does the shop open at nine?', 'Öffnet das Geschäft um neun?']],
     tip: 'Das -s steckt in Frage und Verneinung im does, nicht im Verb: Does she work? (nicht: Does she works?)'
@@ -40,7 +41,7 @@
       'Frage: Am / Is / Are + Person + -ing: Are you working?',
       'Schreibung: run → running, make → making, lie → lying.'
     ],
-    use: ['Etwas passiert genau jetzt: Look! It is raining.', 'Vorübergehende Situation: I am staying with my aunt this week.', 'Feste Verabredung in der Zukunft: We are meeting Tom at five.'],
+    use: ['Etwas passiert genau jetzt: Look! It is raining.', 'Vorübergehende Situation: I am staying with my aunt this week.', 'Feste Verabredung in der Zukunft: We are meeting Tom at five.', 'Nerviges Verhalten mit always: My brother is always borrowing my things!'],
     signals: 'now, right now, at the moment, today, this week, Look!, Listen!',
     examples: [['The baby is sleeping right now.', 'Das Baby schläft gerade.'], ["They aren't watching TV.", 'Sie sehen nicht fern.'], ['What are you doing?', 'Was machst du gerade?']],
     tip: 'Verben für Zustände (know, like, want, love) stehen meistens NICHT in der -ing-Form: I know him (nicht: I am knowing him).'
@@ -93,10 +94,10 @@
       "Verneinung: wasn't / weren't + -ing.",
       'Frage: Was / Were + Person + -ing: Were you working?'
     ],
-    use: ['Handlung lief zu einem bestimmten Zeitpunkt: At 8 pm I was doing my homework.', 'Lange Handlung wird von kurzer unterbrochen: I was cooking when the phone rang.', 'Zwei Handlungen liefen gleichzeitig: While I was reading, he was playing.'],
+    use: ['Handlung lief zu einem bestimmten Zeitpunkt: At 8 pm I was doing my homework.', 'Lange Handlung wird von kurzer unterbrochen: I was cooking when the phone rang.', 'Zwei Handlungen liefen gleichzeitig: While I was reading, he was playing.', 'Hintergrund in einer Geschichte: It was raining, so Wendy took an umbrella.'],
     signals: 'while, when, as, at 8 pm yesterday, all morning',
     examples: [['He was watching TV when the phone rang.', 'Er sah fern, als das Telefon klingelte.'], ['They were playing all afternoon.', 'Sie spielten den ganzen Nachmittag.']],
-    tip: 'Die lange Handlung steht im Past Progressive, die kurze Unterbrechung im Past Simple: I was cooking (lang) when the phone rang (kurz).'
+    tip: 'Die lange Handlung steht im Past Progressive, die kurze Unterbrechung im Past Simple: I was cooking (lang) when the phone rang (kurz). Für wiederholte Handlungen früher nimmt man Past Simple: We went skiing every winter.'
   }, [
     ['He ___ (watch) TV when the phone rang.', 'was watching', { w: ['watched', 'is watching', 'has watched'] }],
     ['It ___ (rain) hard when I woke up.', 'was raining', { w: ['rains', 'has rained', 'is raining'] }],
