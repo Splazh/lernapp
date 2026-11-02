@@ -19,6 +19,9 @@
   // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
   const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
 
+  // Stand aus einer Sicherung einsetzen (die Daten wurden vorher in backup.js geprüft).
+  const restore = d => { for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), d); save(); };
+
   // ---------- Helfer ----------
   function h(tag, attrs, ...kids) {
     const e = document.createElement(tag);
@@ -213,7 +216,7 @@
     window.scrollTo(0, 0);
   }
 
-  Object.assign(LA, { RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  Object.assign(LA, { restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();

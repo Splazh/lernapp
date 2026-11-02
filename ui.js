@@ -209,6 +209,7 @@
           e.currentTarget.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on');
         } }, l))),
       h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: shareApp }, tileIco('💌'), h('span', { class: 'grow' }, 'App weitergeben', h('small', null, 'Link an eine Freundin schicken')), svg('chevron', 'chev')),
+      ui.backupCard ? ui.backupCard() : '',
       resetBtn);
   }
 

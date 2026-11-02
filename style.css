@@ -235,6 +235,13 @@ body:not([data-tab]) #tabs, body[data-tab=""] #tabs { display: none; }
 .welcome .field { text-align: left; } .welcome .cta { margin-top: 6px; }
 .wlogo { width: 92px; height: 92px; margin: 0 auto; border-radius: 28px; background: linear-gradient(135deg, #5B3CF0, var(--pri-2)); display: grid; place-items: center; font-size: 46px; box-shadow: 0 16px 32px color-mix(in srgb, var(--pri) 35%, transparent); }
 
+.backup .lead { margin: 10px 0 14px; }
+.bk-head { display: flex; align-items: center; gap: 14px; } .bk-head small { display: block; }
+.bk-row { display: flex; gap: 10px; } .bk-row .cta { height: 50px; font-size: 16px; }
+.bk-msg { color: var(--muted); font-size: 14px; margin-top: 12px; } .bk-msg:empty { display: none; }
+.bk-confirm:not(:empty) { margin-top: 14px; padding: 14px; border-radius: 18px; background: color-mix(in srgb, #FFB020 14%, var(--surface)); border: 2px solid color-mix(in srgb, #FFB020 50%, transparent); }
+.bk-confirm .bk-row { margin-top: 12px; } .bk-confirm .lead { margin: 6px 0 0; }
+
 /* Ringe */
 .ring { display: block; } .ring-bg { stroke: var(--line); } .ring-fg { stroke: var(--pri); transition: stroke-dashoffset 1s cubic-bezier(.22, 1, .36, 1); }
 .donut .ring-bg { stroke: var(--line); } .don-fg { stroke-linecap: butt; }
