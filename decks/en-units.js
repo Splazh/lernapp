@@ -29,4 +29,15 @@
     ['asoziales Verhalten', 'antisocial behaviour'], ['Gemeinschaft, Gemeinde', 'community'], ['anonym', 'anonymous'], ['Wohlbefinden', 'well-being'], ['isoliert, abgeschieden', 'isolated'],
     ['mit jemandem in Kontakt kommen', 'come into contact with'], ['zufällig treffen', 'bump into'], ['zufällige Begegnung', 'chance meeting'], ['Fremde(r)', 'stranger'], ['Unterhaltung, Gespräch', 'conversation']
   ]);
+
+  add('en-unit2-more', 'Unit 2 weiter und Extra Material', '🧑‍🤝‍🧑', [
+    ['etwas als selbstverständlich nehmen', 'take sth. for granted'], ['verwirrt', 'puzzled'], ['so tun als ob', 'pretend'], ['Fehler, Schwäche', 'fault'], ['Ausnahme', 'exception'],
+    ['über jemanden tratschen', 'gossip about sb.'], ['im Vertrauen', 'in confidence'], ['Schaden, schaden', 'harm'], ['gelegentlich', 'occasionally'], ['Privatsphäre', 'privacy'],
+    ['kritisieren', 'criticize'], ['Aussehen', 'appearance'], ['verlässlich', 'reliable'], ['Fehler verzeihen', 'forgive mistakes'], ['verzweifelt', 'desperate'], ['nötig, notwendig', 'necessary'],
+    ['verletzt (seelisch)', 'hurt'], ['eingreifen', 'step in'], ['jemandem Freiraum geben', 'give sb. space'], ['rund um die Uhr, 24 Stunden an 7 Tagen', '24/7'], ['Vorbild', 'role model'],
+    ['von der Schule verweisen', 'expel'], ['Eingreifen, Intervention', 'intervention'], ['Opfer', 'victim'],
+    ['Kernfamilie (Eltern und Kinder)', 'nuclear family'], ['Stiefvater', 'stepfather'], ['Pflegefamilie', 'foster family'], ['Waise', 'orphan'], ['Abstammung, Vorfahren', 'ancestry'],
+    ['Nachkommen', 'descendants'], ['Großfamilie (mit Großeltern und weiteren Verwandten)', 'extended family'], ['die Scheidung einreichen', 'apply for a divorce'],
+    ['einen eigenen Haushalt gründen', 'set up one's own household'], ['Urgroßmutter', 'great-grandmother'], ['Urgroßeltern', 'great-grandparents'], ['Großonkel', 'great-uncle']
+  ]);
 })();
