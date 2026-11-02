@@ -32,8 +32,9 @@
     cfg.mathInput = !!base(d).mathInput;
     if (!cardsOf(d).length) return LA.goBack(d);
     LA.opt(d).mode = key; touch(d); xp0 = S.xp;
-    if (key === 'pairs') return pairs(d);
-    if (key === 'timed') return timed(d);
+    // go() räumt den alten Bildschirm weg, sonst hängt das Spiel unter dem Themen-Blatt.
+    if (key === 'pairs') return go(() => pairs(d));
+    if (key === 'timed') return go(() => timed(d));
     const queue = pick(d, 10);
     if (!queue.length) return LA.goBack(d);
     let i = 0, right = 0;
@@ -111,11 +112,11 @@
     const set = pick(d, 6);
     const tiles = shuffle(set.flatMap(c => [{ id: c.i, t: prompt(d, c) }, { id: c.i, t: ansText(d, c), a: true }]));
     let sel = null, moves = 0, left = set.length, lock = false;
-    const els = tiles.map(t => h('button', { class: 'tile', onclick: () => tap(t, els[tiles.indexOf(t)]) }, t.t));
+    const els = tiles.map(t => h('button', { class: 'tile', type: 'button', onclick: () => tap(t, els[tiles.indexOf(t)]) }, h('span', null, t.t)));
     const bar = h('i', { style: 'width:0%' });
     function tap(t, e) {
       if (lock || e === sel) return;
-      if (!sel) { sel = { t, e }; e.classList.add('sel'); return; }
+      if (!sel) { sel = { t, e }; e.classList.add('sel'); buzz(15); return; }
       moves++;
       const first = sel; sel = null;
       if (first.t.id === t.id && first.t.a !== t.a) {
@@ -130,7 +131,7 @@
     }
     view.append(
       h('div', { class: 'qtop' }, h('button', { class: 'iconbtn', 'aria-label': 'Beenden', onclick: leave(d) }, svg('close')), h('div', { class: 'track' }, bar)),
-      h('p', { class: 'lead' }, 'Tippe zwei Kacheln an, die zusammengehören.'), h('div', { class: 'tiles' }, els));
+      h('p', { class: 'pairhint' }, 'Tippe zwei Kacheln an, die zusammengehören.'), h('div', { class: 'tiles' }, els));
   }
 
   // ---------- Zeitspiel ----------
