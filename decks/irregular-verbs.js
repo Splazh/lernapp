@@ -2,6 +2,7 @@
 // Mehrere erlaubte Formen mit "/" trennen (z. B. "got/gotten").
 (window.DECKS = window.DECKS || []).push({
   id: 'irregular-verbs',
+  subject: 'englisch',
   title: 'Irregular Verbs',
   icon: '🔤',
   labels: ['Infinitive', 'Past Simple', 'Past Participle'],

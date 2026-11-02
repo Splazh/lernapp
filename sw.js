@@ -1,7 +1,7 @@
 // Offline-Cache: erst Netz (damit Updates ankommen), sonst Cache.
-const CACHE = 'lernapp-v1';
+const CACHE = 'lernapp-v2';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
-  'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'decks/irregular-verbs.js'];
+  'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'decks/subjects.js', 'decks/irregular-verbs.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

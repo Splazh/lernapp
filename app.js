@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const DECKS = window.DECKS || [];
+  const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
   let timer = null;
 
@@ -27,14 +28,23 @@
   const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* egal */ } };
 
   // ---------- Stoff ----------
-  const cardsOf = d => d.cards.map((r, i) => ({ i, q: r[0], a: r.slice(1) }));
+  // "Falsche Antworten" ist ein gefilterter Blick (d.filter) auf ein Stoffpaket (d.base).
+  const base = d => d.base || d;
+  const cardsOf = d => d.cards.map((r, i) => ({ i, q: r[0], a: r.slice(1) })).filter(c => !d.filter || d.filter(c));
+  const decksOf = sub => DECKS.filter(d => d.subject === sub.id);
+  const wrongDeck = (d, sub) => Object.assign({}, d, {
+    base: d, filter: c => !!st(d, c).wrong, title: 'Falsche Antworten · ' + d.title,
+    back: () => go(() => wrongScreen(sub))
+  });
+  const wrongCount = sub => decksOf(sub).reduce((n, d) => n + cardsOf(wrongDeck(d, sub)).length, 0);
+  const goBack = d => d.back ? d.back() : go(() => subjectScreen(SUBJECTS.find(s => s.id === d.subject)));
   const st = (d, c) => ((S.cards[d.id] = S.cards[d.id] || {})[c.i] = (S.cards[d.id] || {})[c.i] || { box: 0, seen: 0, right: 0 });
   const opt = d => (S.opts[d.id] = S.opts[d.id] || { skip: d.labels.length > 1 ? 1 : 0 });
   const prompt = (d, c) => opt(d).skip ? c.q + '  ·  ' + c.a.slice(0, opt(d).skip).join(' / ') : c.q;
   const ans = (d, c) => c.a.slice(opt(d).skip);
   const labels = d => d.labels.slice(opt(d).skip);
   const ansText = (d, c) => ans(d, c).join(' – ');
-  const mastered = d => cardsOf(d).filter(c => st(d, c).box >= 3).length;
+  const mastered = d => cardsOf(base(d)).filter(c => st(d, c).box >= 3).length;
 
   // ---------- Fortschritt ----------
   const streakNow = () => (S.last === dayStr(Date.now()) || S.last === dayStr(Date.now() - 864e5)) ? S.streak : 0;
@@ -46,6 +56,7 @@
     bump();
     const s = st(d, c);
     s.seen++;
+    s.wrong = !ok;
     if (ok) { s.right++; s.box = Math.min(4, s.box + 1); S.xp += 10; } else { s.box = 0; S.xp += 2; }
     save();
   }
@@ -81,7 +92,7 @@
       ].map(x => x.join(' – '));
       shuffle(cand).forEach(t => { if (!isRight(t) && !wrong.includes(t) && wrong.length < 2) wrong.push(t); });
     }
-    for (const o of shuffle(cardsOf(d))) {
+    for (const o of shuffle(cardsOf(base(d)))) {
       const t = ansText(d, o);
       if (wrong.length >= 3) break;
       if (o.i !== c.i && !isRight(t) && !wrong.includes(t)) wrong.push(t);
@@ -99,21 +110,54 @@
   function home() {
     const lvl = Math.floor(S.xp / 100) + 1;
     view.append(
-      h('h1', null, '🎓 Lernapp'),
-      h('p', { class: 'muted' }, 'Üben, spielen, merken. Such dir was aus!'),
+      h('div', { class: 'hello' }, h('h1', null, 'Hallo Lana! 👋'), h('p', { class: 'muted' }, 'Was lernen wir heute?')),
       h('div', { class: 'stats' },
         h('span', { class: 'chip' }, '🔥 ' + streakNow() + ' Tage'),
         h('span', { class: 'chip' }, '⭐ ' + S.xp + ' XP'),
         h('span', { class: 'chip' }, '🏆 Level ' + lvl)),
       h('div', { class: 'level' }, h('i', { style: 'width:' + (S.xp % 100) + '%' })),
-      h('div', { class: 'stack' }, DECKS.map(d => {
-        const m = mastered(d), n = d.cards.length;
-        return h('button', { class: 'btn deck', onclick: () => go(() => deckScreen(d)) },
-          h('span', { class: 'ico' }, d.icon),
-          h('span', { class: 'grow' }, d.title,
-            h('small', null, m + ' von ' + n + ' sicher gelernt'),
-            h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(m / n * 100) + '%' }))));
+      h('div', { class: 'subjects' }, SUBJECTS.map(sub => {
+        const ds = decksOf(sub), w = wrongCount(sub);
+        const sub2 = ds.length ? ds.length + (ds.length === 1 ? ' Thema' : ' Themen') : 'Kommt bald';
+        return h('button', { class: 'subj' + (ds.length ? '' : ' soon'), style: '--c:' + sub.color, onclick: () => go(() => subjectScreen(sub)) },
+          w ? h('span', { class: 'badge', title: 'Falsche Antworten' }, w) : null,
+          h('span', { class: 'ico' }, sub.icon), h('strong', null, sub.title), h('small', null, sub2));
       })));
+  }
+
+  // ---------- Fach ----------
+  function subjectScreen(sub) {
+    const ds = decksOf(sub), w = wrongCount(sub);
+    view.append(
+      topBar(() => go(home)),
+      h('h1', null, sub.icon + ' ' + sub.title),
+      h('p', { class: 'muted' }, ds.length ? 'Such dir ein Thema aus' : 'Hier kommt bald Stoff rein 🌱'),
+      h('div', { class: 'stack' },
+        ds.map(d => {
+          const m = mastered(d), n = d.cards.length;
+          return h('button', { class: 'btn deck', onclick: () => go(() => deckScreen(d)) },
+            h('span', { class: 'ico' }, d.icon),
+            h('span', { class: 'grow' }, d.title,
+              h('small', null, m + ' von ' + n + ' sicher gelernt'),
+              h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(m / n * 100) + '%' }))));
+        }),
+        h('button', { class: 'btn deck', onclick: () => go(() => wrongScreen(sub)) },
+          h('span', { class: 'ico' }, '❌'),
+          h('span', { class: 'grow' }, 'Falsche Antworten', h('small', null, w ? w + ' zum Nochmal-Üben' : 'Noch keine, super!')))));
+  }
+
+  // ---------- Falsche Antworten ----------
+  function wrongScreen(sub) {
+    const groups = decksOf(sub).map(d => ({ wd: wrongDeck(d, sub) })).map(g => ({ ...g, list: cardsOf(g.wd) })).filter(g => g.list.length);
+    view.append(
+      topBar(() => go(() => subjectScreen(sub))),
+      h('h1', null, '❌ Falsche Antworten'),
+      h('p', { class: 'muted' }, groups.length ? 'Das hattest du zuletzt falsch. Richtig beantwortet, verschwindet es hier.' : 'Nichts falsch, alles im grünen Bereich 🎉'),
+      ...groups.map(g => h('section', { class: 'wgroup' },
+        h('h3', null, base(g.wd).title, h('span', { class: 'muted' }, '  ·  ' + g.list.length)),
+        h('div', { class: 'wlist' }, g.list.map(c => h('div', { class: 'witem' },
+          h('strong', null, c.q), h('span', null, c.a.join(' – '))))),
+        h('button', { class: 'btn primary', onclick: () => go(() => deckScreen(g.wd)) }, 'Diese ' + g.list.length + ' üben'))));
   }
 
   // ---------- Stoff-Seite mit Lernarten ----------
@@ -127,9 +171,9 @@
       ['⏱️', 'Zeitspiel', '60 Sekunden, so viele wie möglich', 'timed']
     ];
     view.append(
-      topBar(() => go(home)),
-      h('h1', null, d.icon + ' ' + d.title),
-      h('p', { class: 'muted' }, mastered(d) + ' von ' + d.cards.length + ' sicher gelernt'),
+      topBar(() => goBack(d)),
+      h('h1', null, d.filter ? '❌ ' + base(d).title : d.icon + ' ' + d.title),
+      h('p', { class: 'muted' }, d.filter ? cardsOf(d).length + ' Karten zum Wiederholen' : mastered(d) + ' von ' + d.cards.length + ' sicher gelernt'),
       d.labels.length > 1 ? h('label', { class: 'toggle' },
         h('input', { type: 'checkbox', checked: o.skip > 0, onchange: e => { o.skip = e.target.checked ? 1 : 0; save(); } }),
         h('span', null, 'Erste Form vorgeben', h('small', { class: 'muted', style: 'display:block' }, d.labels[0] + ' steht schon da, du musst den Rest wissen'))) : null,
@@ -138,9 +182,11 @@
   }
 
   function start(d, key) {
+    if (!cardsOf(d).length) return goBack(d);
     if (key === 'pairs') return pairs(d);
     if (key === 'timed') return timed(d);
     const queue = pick(d, 10);
+    if (!queue.length) return goBack(d);
     let i = 0, right = 0;
     const next = () => {
       if (i >= queue.length) return go(() => finish(d, right, queue.length, key));
@@ -297,7 +343,7 @@
     }
     view.append(h('div', { class: 'result' },
       h('div', { class: 'emoji' }, emoji), h('h2', null, title), h('div', { class: 'score' }, score),
-      h('p', { class: 'muted' }, '⭐ ' + S.xp + ' XP  ·  🔥 ' + streakNow() + ' Tage  ·  ' + mastered(d) + '/' + d.cards.length + ' sicher'
+      h('p', { class: 'muted' }, '⭐ ' + S.xp + ' XP  ·  🔥 ' + streakNow() + ' Tage  ·  ' + mastered(d) + '/' + base(d).cards.length + ' sicher'
         + (key === 'timed' ? '  ·  Rekord ' + (S.best[d.id] || 0) : '')),
       h('div', { class: 'stack', style: 'margin-top:20px' },
         h('button', { class: 'btn primary', onclick: () => go(() => start(d, key)) }, 'Nochmal'),
