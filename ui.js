@@ -222,7 +222,7 @@
       const v = input.value.trim();
       if (!v) { err.textContent = 'Wie soll ich dich nennen?'; input.focus(); return; }
       S.name = v; S.seeded = true; save(); go(home, 'learn');
-    } }, h('div', { class: 'wlogo' }, '🎓'), h('h1', null, 'Willkommen!'),
+    } }, h('img', { class: 'wlogo', src: 'icon.svg', alt: '', width: 96, height: 96 }), h('h1', null, 'Willkommen!'),
       h('p', { class: 'lead' }, 'Lernen mit Karteikarten, Spielen und Tagesaufgaben. Alle Fächer an einem Ort. Wie heißt du?'),
       h('label', { class: 'field' }, h('span', null, 'Name'), input), err, h('button', { class: 'cta', type: 'submit' }, "Los geht's"));
     view.append(form);

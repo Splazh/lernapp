@@ -233,7 +233,7 @@ body:not([data-tab]) #tabs, body[data-tab=""] #tabs { display: none; }
 
 .welcome { display: grid; gap: 14px; justify-items: stretch; padding-top: 12vh; text-align: center; }
 .welcome .field { text-align: left; } .welcome .cta { margin-top: 6px; }
-.wlogo { width: 92px; height: 92px; margin: 0 auto; border-radius: 28px; background: linear-gradient(135deg, #5B3CF0, var(--pri-2)); display: grid; place-items: center; font-size: 46px; box-shadow: 0 16px 32px color-mix(in srgb, var(--pri) 35%, transparent); }
+.wlogo { display: block; width: 96px; height: 96px; margin: 0 auto; border-radius: 28px; box-shadow: 0 16px 32px color-mix(in srgb, var(--pri) 35%, transparent); }
 
 .backup .lead { margin: 10px 0 14px; }
 .bk-head { display: flex; align-items: center; gap: 14px; } .bk-head small { display: block; }
