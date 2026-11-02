@@ -26,6 +26,13 @@
     const el = h('div', { class: 'dock plain' }, kids); view.append(el); return el;
   };
 
+  // Erklärung nach einer falschen Antwort. Nur beim Wiederholen unter "Falsche Antworten" (d.filter), nie in normalen Runden.
+  function explainBox(d, c) {
+    if (!d.filter) return '';
+    const l = LA.explainLines(d, c);
+    return l.length ? h('div', { class: 'explain' }, h('strong', null, 'Erklärung'), l.map(t => h('p', null, t))) : '';
+  }
+
   // ---------- Start einer Runde ----------
   function start(d, key) {
     cfg.looseAccents = !!base(d).looseAccents;
@@ -35,12 +42,13 @@
     // go() räumt den alten Bildschirm weg, sonst hängt das Spiel unter dem Themen-Blatt.
     if (key === 'pairs') return go(() => pairs(d));
     if (key === 'timed') return go(() => timed(d));
+    if (key === 'order') return LA.orderStart(d);
     const queue = pick(d, 10);
     if (!queue.length) return LA.goBack(d);
     let i = 0, right = 0;
     const next = () => {
       if (i >= queue.length) return go(() => finish(d, right, queue.length, key));
-      go(() => ({ flash, mc, type }[key])(d, queue[i], queue.length, i, ok => { if (ok) right++; i++; next(); }));
+      go(() => ({ flash, mc, type, ...LA.modes }[key])(d, queue[i], queue.length, i, ok => { if (ok) right++; i++; next(); }));
     };
     next();
   }
@@ -76,8 +84,10 @@
     return h('div', { class: 'opts' }, btns);
   }
   function mc(d, c, n, i, done) {
-    view.append(top(d, i, n), qcard(d, c), choices(d, c, (ok, right) =>
-      dock(ok, ok ? 'Richtig!' : 'Nicht ganz', ok ? '+10 XP' : 'Richtig ist: ' + right, () => done(ok))));
+    view.append(top(d, i, n), qcard(d, c), choices(d, c, (ok, right) => {
+      if (!ok) { const x = explainBox(d, c); if (x) view.append(x); }
+      dock(ok, ok ? 'Richtig!' : 'Nicht ganz', ok ? '+10 XP' : 'Richtig ist: ' + right, () => done(ok));
+    }));
   }
 
   // ---------- Selber schreiben ----------
@@ -94,7 +104,7 @@
         inp.parentNode.classList.add(res[k] ? 'ok' : 'no');
         if (!res[k]) inp.parentNode.append(h('em', { class: 'sol' }, splitVar(sol[k]).join('  oder  ')));
       });
-      if (!allOk) buzz(60);
+      if (!allOk) { buzz(60); const x = explainBox(d, c); if (x) view.append(x); }
       rate(d, c, allOk);
       dock(allOk, allOk ? 'Richtig!' : 'Fast', allOk ? '+10 XP' : 'Die Lösung steht unter dem Feld.', () => done(allOk));
     }
@@ -195,4 +205,5 @@
   }
 
   LA.start = start;
+  LA.kit = { top, qcard, dock, plainDock, leave, finish, explainBox };
 })();

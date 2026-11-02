@@ -98,11 +98,14 @@
     { key: 'mc', ico: '🎯', t: 'Multiple Choice', d: 'Die richtige Antwort antippen.' },
     { key: 'type', ico: '⌨️', t: 'Selber schreiben', d: 'Tippe die Lösung ein.' },
     { key: 'pairs', ico: '🧩', t: 'Paare finden', d: 'Finde, was zusammengehört.' },
-    { key: 'timed', ico: '⏱️', t: 'Zeitspiel', d: '60 Sekunden, so viele wie möglich.' }
+    { key: 'timed', ico: '⏱️', t: 'Zeitspiel', d: '60 Sekunden, so viele wie möglich.' },
+    { key: 'tf', ico: '⚖️', t: 'Richtig oder falsch', d: 'Stimmt die Aussage? Tippe Richtig oder Falsch.' },
+    { key: 'gap', ico: '✏️', t: 'Lücken füllen', d: 'Ergänze das fehlende Wort oder die fehlenden Buchstaben.', ok: d => !LA.base(d).mathInput && cardsOf(LA.base(d)).filter(c => LA.ans(d, c).join(' ').length <= 32).length >= cardsOf(LA.base(d)).length * .6 },
+    { key: 'order', ico: '🔀', t: 'Reihenfolge', d: 'Bringe Wörter oder Schritte in die richtige Reihenfolge.', ok: d => !!LA.hasOrder && LA.hasOrder(d) }
   ];
   function deck(d) {
     const o = LA.opt(d), b = base(d), sub = subjectOf(d);
-    const modes = MODES.filter(m => !(b.noModes || []).includes(m.key));
+    const modes = MODES.filter(m => !(b.noModes || []).includes(m.key) && (!m.ok || m.ok(d)));
     let mode = modes.some(m => m.key === o.mode) ? o.mode : modes[0].key;
     const desc = h('p', { class: 'modedesc' }), btns = [];
     const sel = k => { mode = k; btns.forEach(x => x.el.classList.toggle('on', x.k === k)); desc.textContent = modes.find(m => m.key === k).d; };

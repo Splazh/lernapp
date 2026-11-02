@@ -2,7 +2,7 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 18 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 19 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
@@ -88,8 +88,9 @@
   // "Falsche Antworten" ist ein gefilterter Blick (d.filter) auf ein Stoffpaket (d.base).
   const base = d => d.base || d;
   const cardsOf = d => d.cards.map((r, i) => {
-    const w = r.length > 2 && typeof r[r.length - 1] === 'object' ? r[r.length - 1].w : null;
-    return { i, q: r[0], a: r.slice(1, w ? -1 : undefined), w };
+    // Letztes Feld kann ein Zusatz-Objekt sein: { w: [falsche Antworten], e: 'Erklärung' }
+    const m = r.length > 2 && r[r.length - 1] && typeof r[r.length - 1] === 'object' ? r[r.length - 1] : null;
+    return { i, q: r[0], a: r.slice(1, m ? -1 : undefined), w: m ? m.w || null : null, e: m ? m.e : undefined };
   }).filter(c => !d.filter || d.filter(c));
   const decksOf = sub => DECKS.filter(d => d.subject === sub.id);
   const subjectOf = d => SUBJECTS.find(s => s.id === base(d).subject);
@@ -137,12 +138,13 @@
     if (S.last !== t) { S.streak = S.last === dayStr(Date.now() - 864e5) ? S.streak + 1 : 1; S.last = t; }
     S.maxStreak = Math.max(S.maxStreak || 0, S.streak);
   }
-  function rate(d, c, ok) {
+  // soft = Raten ist möglich (Richtig/Falsch): richtig zählt nur halb und schiebt die Karte nicht weiter.
+  function rate(d, c, ok, soft) {
     bump();
     const s = st(d, c), was = s.wrong;
     s.seen++;
     s.wrong = !ok;
-    if (ok) { s.right++; s.box = Math.min(4, s.box + 1); addXp(10); if (was) S.fixed = (S.fixed || 0) + 1; } else { s.box = 0; addXp(2); }
+    if (ok) { s.right++; if (!soft) s.box = Math.min(4, s.box + 1); addXp(soft ? 5 : 10); if (was) S.fixed = (S.fixed || 0) + 1; } else { s.box = 0; addXp(2); }
     save();
     if (LA.onRate) LA.onRate(d, c, ok, !!was);
   }
@@ -205,6 +207,21 @@
     return shuffle([correct, ...wrong]);
   }
 
+  // ---------- Beispielsätze und Erklärungen ----------
+  // Beispielsatz mit ___ aus decks/sentences.js (window.SENT), gesucht ist die erste Antwort der Karte.
+  const sentence = (d, c) => ((window.SENT || {})[base(d).id] || {})[c.a[0]] || null;
+  const filled = (d, c) => { const s = sentence(d, c); return s ? s.replace('___', splitVar(c.a[0])[0]) : null; };
+  // Erklärung zu einer Karte. Gibt es nichts Passendes, bleibt die Liste leer.
+  function explainLines(d, c) {
+    const b = base(d), out = [], own = ((window.EXPL || {})[b.id] || {})[c.a[0]] || c.e;
+    if (own) out.push(own);
+    const tense = !own && DECKS.find(x => x.title === c.a[0] && x.info && x.info.kurz);   // "Zeitform erkennen": Antwort ist der Name einer Zeitform
+    if (tense) out.push(tense.info.kurz + (tense.info.signals ? ' Signalwörter: ' + tense.info.signals : ''));
+    const f = filled(d, c); if (f) out.push('Beispiel: ' + f);
+    if (!out.length && b.info && b.info.tip) out.push('Merke: ' + b.info.tip);
+    return out;
+  }
+
   // ---------- Navigation ----------
   // tab: 'learn' | 'plan' | 'practice' | 'notes' | 'profile' zeigt die Tab-Leiste, ohne tab ist sie versteckt (Lernen läuft).
   function go(fn, tab) {
@@ -216,7 +233,7 @@
     window.scrollTo(0, 0);
   }
 
-  Object.assign(LA, { restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  Object.assign(LA, { sentence, filled, explainLines, restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();
