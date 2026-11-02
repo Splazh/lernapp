@@ -3,7 +3,8 @@
 (window.DECKS = window.DECKS || []).push({
   id: 'tenses-erkennen',
   subject: 'englisch',
-  title: 'Tenses erkennen',
+  group: 'Alle Zeiten gemischt',
+  title: 'Zeitform erkennen',
   icon: '🕰️',
   labels: ['Zeitform'],
   noModes: ['pairs'],

@@ -3,7 +3,8 @@
 (window.DECKS = window.DECKS || []).push({
   id: 'tenses-luecken',
   subject: 'englisch',
-  title: 'Tenses: Lückentext',
+  group: 'Alle Zeiten gemischt',
+  title: 'Lückentext gemischt',
   icon: '✍️',
   labels: ['Lücke'],
   noModes: ['pairs'],

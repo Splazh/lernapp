@@ -143,13 +143,14 @@
       h('h1', null, sub.icon + ' ' + sub.title),
       h('p', { class: 'muted' }, ds.length ? 'Such dir ein Thema aus' : 'Hier kommt bald Stoff rein 🌱'),
       h('div', { class: 'stack' },
-        ds.map(d => {
+        ds.flatMap((d, k) => {
           const m = mastered(d), n = d.cards.length;
-          return h('button', { class: 'btn deck', onclick: () => go(() => deckScreen(d)) },
+          const head = d.group && d.group !== (ds[k - 1] || {}).group ? h('h3', { class: 'grp' }, d.group) : null;
+          return [head, h('button', { class: 'btn deck', onclick: () => go(() => deckScreen(d)) },
             h('span', { class: 'ico' }, d.icon),
             h('span', { class: 'grow' }, d.title,
               h('small', null, m + ' von ' + n + ' sicher gelernt'),
-              h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(m / n * 100) + '%' }))));
+              h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(m / n * 100) + '%' }))))];
         }),
         h('button', { class: 'btn deck', onclick: () => go(() => wrongScreen(sub)) },
           h('span', { class: 'ico' }, '❌'),
@@ -187,8 +188,27 @@
       d.labels.length > 1 ? h('label', { class: 'toggle' },
         h('input', { type: 'checkbox', checked: o.skip > 0, onchange: e => { o.skip = e.target.checked ? 1 : 0; save(); } }),
         h('span', null, 'Erste Form vorgeben', h('small', { class: 'muted', style: 'display:block' }, d.labels[0] + ' steht schon da, du musst den Rest wissen'))) : '',
+      base(d).info && !d.filter ? h('button', { class: 'btn primary', style: 'margin-bottom:12px', onclick: () => go(() => infoScreen(d)) }, '📖 Erklärung: so funktioniert diese Zeit') : '',
       h('div', { class: 'stack' }, modes.filter(m => !(base(d).noModes || []).includes(m[3])).map(([ic, t, sub, key]) =>
         h('button', { class: 'btn', onclick: () => go(() => start(d, key)) }, ic + '  ' + t, h('small', null, sub)))));
+  }
+
+  // ---------- Erklärung zu einem Thema ----------
+  function infoScreen(d) {
+    const i = d.info;
+    const list = (title, items) => items && items.length
+      ? h('section', { class: 'info' }, h('h3', null, title), h('ul', null, items.map(t => h('li', null, t)))) : '';
+    view.append(
+      topBar(() => go(() => deckScreen(d))),
+      h('h1', null, d.icon + ' ' + d.title),
+      h('p', { class: 'muted' }, i.kurz || ''),
+      list('So bildest du sie', i.form),
+      list('Wann benutzt du sie?', i.use),
+      i.signals ? h('section', { class: 'info' }, h('h3', null, 'Signalwörter'), h('p', { class: 'sig' }, i.signals)) : '',
+      i.examples ? h('section', { class: 'info' }, h('h3', null, 'Beispiele'),
+        ...i.examples.map(([en, de]) => h('div', { class: 'ex' }, h('strong', null, en), h('span', { class: 'muted' }, de)))) : '',
+      i.tip ? h('div', { class: 'tip' }, '💡 ' + i.tip) : '',
+      h('button', { class: 'btn primary', style: 'margin-top:16px', onclick: () => go(() => deckScreen(d)) }, 'Jetzt üben →'));
   }
 
   function start(d, key) {
