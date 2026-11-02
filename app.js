@@ -30,7 +30,10 @@
   // ---------- Stoff ----------
   // "Falsche Antworten" ist ein gefilterter Blick (d.filter) auf ein Stoffpaket (d.base).
   const base = d => d.base || d;
-  const cardsOf = d => d.cards.map((r, i) => ({ i, q: r[0], a: r.slice(1) })).filter(c => !d.filter || d.filter(c));
+  const cardsOf = d => d.cards.map((r, i) => {
+    const w = r.length > 2 && typeof r[r.length - 1] === 'object' ? r[r.length - 1].w : null;
+    return { i, q: r[0], a: r.slice(1, w ? -1 : undefined), w };
+  }).filter(c => !d.filter || d.filter(c));
   const decksOf = sub => DECKS.filter(d => d.subject === sub.id);
   const wrongDeck = (d, sub) => Object.assign({}, d, {
     base: d, filter: c => !!st(d, c).wrong, title: 'Falsche Antworten · ' + d.title,
@@ -73,13 +76,20 @@
   }
 
   // ---------- Antworten prüfen ----------
-  const norm = s => s.toLowerCase().trim().replace(/\s+/g, ' ');
+  const norm = s => s.toLowerCase().trim().replace(/[‘’`´]/g, "'").replace(/\s+/g, ' ');
   const variants = s => s.split('/').map(norm);
   const fieldOk = (input, solution) => variants(solution).includes(norm(input));
+
+  // Passt ein Auswahltext zur richtigen Antwort (inkl. erlaubter Varianten)?
+  const matches = (d, c, t) => { const r = ans(d, c), p = t.split(' – '); return p.length === r.length && p.every((x, k) => variants(r[k]).includes(norm(x))); };
 
   // Falsche Antwortmöglichkeiten: bei mehreren Formen auch vertauschte Formen.
   function options(d, c) {
     const right = ans(d, c), correct = right.join(' – ');
+    // Eigene Falsch-Antworten der Karte oder Antwort-Pool des Stoffpakets (z. B. Zeitformen)
+    if (c.w) return shuffle([right.map(x => x.split('/')[0]).join(' – '), ...c.w.slice(0, 3)]);
+    const pool = base(d).pool;
+    if (pool) return shuffle([correct, ...shuffle(pool.filter(p => !matches(d, c, p))).slice(0, 3)]);
     // Eine Falsch-Antwort darf nie auch richtig sein (z. B. "got – got" bei got/gotten).
     const isRight = t => t.split(' – ').every((p, k) => right[k] != null && variants(right[k]).includes(norm(p)));
     const wrong = [];
@@ -176,8 +186,8 @@
       h('p', { class: 'muted' }, d.filter ? cardsOf(d).length + ' Karten zum Wiederholen' : mastered(d) + ' von ' + d.cards.length + ' sicher gelernt'),
       d.labels.length > 1 ? h('label', { class: 'toggle' },
         h('input', { type: 'checkbox', checked: o.skip > 0, onchange: e => { o.skip = e.target.checked ? 1 : 0; save(); } }),
-        h('span', null, 'Erste Form vorgeben', h('small', { class: 'muted', style: 'display:block' }, d.labels[0] + ' steht schon da, du musst den Rest wissen'))) : null,
-      h('div', { class: 'stack' }, modes.map(([ic, t, sub, key]) =>
+        h('span', null, 'Erste Form vorgeben', h('small', { class: 'muted', style: 'display:block' }, d.labels[0] + ' steht schon da, du musst den Rest wissen'))) : '',
+      h('div', { class: 'stack' }, modes.filter(m => !(base(d).noModes || []).includes(m[3])).map(([ic, t, sub, key]) =>
         h('button', { class: 'btn', onclick: () => go(() => start(d, key)) }, ic + '  ' + t, h('small', null, sub)))));
   }
 
@@ -214,12 +224,11 @@
 
   // ---------- Modus: Multiple Choice ----------
   function mc(d, c, n, i, done) {
-    const correct = ansText(d, c);
-    const btns = options(d, c).map(t => h('button', { class: 'btn opt center', onclick: () => pickIt(t, btns.find(b => b.textContent === t)) }, t));
+        const btns = options(d, c).map(t => h('button', { class: 'btn opt center', onclick: () => pickIt(t, btns.find(b => b.textContent === t)) }, t));
     const holder = h('div', { class: 'stack' }, btns);
     function pickIt(t, el) {
-      const ok = t === correct;
-      btns.forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('right'); });
+      const ok = matches(d, c, t);
+      btns.forEach(b => { b.disabled = true; if (matches(d, c, b.textContent)) b.classList.add('right'); });
       if (!ok) { el.classList.add('wrong'); buzz(60); }
       rate(d, c, ok);
       view.append(h('button', { class: 'btn primary', style: 'margin-top:14px', onclick: () => done(ok) }, 'Weiter →'));
@@ -297,14 +306,13 @@
       locked = false;
       const pool = pick(d, 1);
       c = pool[0];
-      const correct = ansText(d, c);
-      const btns = options(d, c).map(t => h('button', { class: 'btn opt center', onclick: () => answer(t, btns.find(b => b.textContent === t)) }, t));
+            const btns = options(d, c).map(t => h('button', { class: 'btn opt center', onclick: () => answer(t, btns.find(b => b.textContent === t)) }, t));
       function answer(t, e) {
         if (locked) return;
         locked = true;
-        const ok = t === correct;
+        const ok = matches(d, c, t);
         rate(d, c, ok);
-        btns.forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('right'); });
+        btns.forEach(b => { b.disabled = true; if (matches(d, c, b.textContent)) b.classList.add('right'); });
         if (ok) { combo++; score += 1 + (combo >= 3 ? 1 : 0); } else { combo = 0; e.classList.add('wrong'); buzz(60); }
         comboEl.textContent = combo >= 3 ? '🔥 Serie x' + combo : '';
         tick();
