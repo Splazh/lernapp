@@ -1,12 +1,13 @@
 // Offline-Cache: erst Netz (damit Updates ankommen), sonst Cache.
-const CACHE = 'lernapp-v15';
+const CACHE = 'lernapp-v16';
 const FILES = ['./', 'index.html', 'style.css', 'core.js', 'play.js', 'tests.js', 'notes.js', 'quests.js', 'backup.js', 'ui.js', 'manifest.webmanifest',
   'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'decks/subjects.js', 'decks/irregular-verbs.js',
   'decks/en-wortschatz.js', 'decks/en-units.js', 'decks/en-formate.js', 'decks/deutsch.js', 'decks/spanisch.js', 'decks/mathe.js',
   'decks/geografie.js', 'decks/ethik.js', 'decks/informatik.js', 'decks/tenses-einzeln.js', 'decks/tenses-buch.js', 'decks/tenses-erkennen.js', 'decks/tenses-luecken.js'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // Beim Einrichten immer frisch vom Server holen (nicht aus dem Browser-Zwischenspeicher), sonst landen alte Dateien im neuen Cache.
+  e.waitUntil(caches.open(CACHE).then(c => Promise.all(FILES.map(f => fetch(new Request(f, { cache: 'reload' })).then(r => { if (!r.ok) throw new Error(f); return c.put(f, r); })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
@@ -16,7 +17,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(e.request.url, { cache: 'no-cache' }).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;

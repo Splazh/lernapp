@@ -210,7 +210,7 @@
         } }, l))),
       h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: shareApp }, tileIco('💌'), h('span', { class: 'grow' }, 'App weitergeben', h('small', null, 'Link an eine Freundin schicken')), svg('chevron', 'chev')),
       ui.backupCard ? ui.backupCard() : '',
-      resetBtn);
+      resetBtn, h('p', { class: 'ver' }, 'Version ' + LA.version));
   }
 
   // ---------- Willkommen (erster Start) ----------
@@ -231,6 +231,11 @@
   Object.assign(ui, { welcome, home, subject, wrong, deck, info, practice, profile });
   if (S.name) go(home, 'learn'); else go(welcome);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* offline-Modus optional */ });
+    const had = !!navigator.serviceWorker.controller; let reloaded = false;
+    // Kommt eine neue Version, einmal neu laden (nicht mitten in einer Lernrunde).
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !reloaded && document.body.dataset.tab) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => { /* offline */ }); });
+    }).catch(() => { /* offline-Modus optional */ });
   }
 })();

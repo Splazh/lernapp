@@ -261,6 +261,8 @@ input, textarea, select { font-size: 16px; }
   .tab { font-size: 11px; }
 }
 
+.ver { text-align: center; color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+
 /* Ringe */
 .ring { display: block; } .ring-bg { stroke: var(--line); } .ring-fg { stroke: var(--pri); transition: stroke-dashoffset 1s cubic-bezier(.22, 1, .36, 1); }
 .donut .ring-bg { stroke: var(--line); } .don-fg { stroke-linecap: butt; }
