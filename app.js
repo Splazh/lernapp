@@ -42,7 +42,7 @@
   const wrongCount = sub => decksOf(sub).reduce((n, d) => n + cardsOf(wrongDeck(d, sub)).length, 0);
   const goBack = d => d.back ? d.back() : go(() => subjectScreen(SUBJECTS.find(s => s.id === d.subject)));
   const st = (d, c) => ((S.cards[d.id] = S.cards[d.id] || {})[c.i] = (S.cards[d.id] || {})[c.i] || { box: 0, seen: 0, right: 0 });
-  const opt = d => (S.opts[d.id] = S.opts[d.id] || { skip: d.labels.length > 1 ? 1 : 0 });
+  const opt = d => (S.opts[d.id] = S.opts[d.id] || { skip: d.defaultSkip != null ? d.defaultSkip : d.labels.length > 1 ? 1 : 0 });
   const prompt = (d, c) => opt(d).skip ? c.q + '  ·  ' + c.a.slice(0, opt(d).skip).join(' / ') : c.q;
   const ans = (d, c) => c.a.slice(opt(d).skip);
   const labels = d => d.labels.slice(opt(d).skip);
@@ -76,8 +76,17 @@
   }
 
   // ---------- Antworten prüfen ----------
-  const norm = s => s.toLowerCase().trim().replace(/[‘’`´]/g, "'").replace(/\s+/g, ' ');
-  const variants = s => s.split('/').map(norm);
+  // Einstellungen des Stoffpakets, das gerade geübt wird (wird in start() gesetzt):
+  // looseAccents = Akzente beim Tippen egal (Spanisch), mathInput = "/" ist ein Bruchstrich, Komma = Punkt.
+  const cfg = { looseAccents: false, mathInput: false };
+  const splitVar = s => cfg.mathInput ? [s] : s.split('/');
+  const norm = s => {
+    let t = s.toLowerCase().trim().replace(/[‘’`´]/g, "'").replace(/\s+/g, ' ');
+    if (cfg.looseAccents) t = t.replace(/[¿¡?!.,;:]/g, '').replace(/\s+/g, ' ').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ñ/g, 'n');
+    if (cfg.mathInput) t = t.replace(/\s+/g, '').replace(/,/g, '.').replace(/−/g, '-');
+    return t;
+  };
+  const variants = s => splitVar(s).map(norm);
   const fieldOk = (input, solution) => variants(solution).includes(norm(input));
 
   // Passt ein Auswahltext zur richtigen Antwort (inkl. erlaubter Varianten)?
@@ -85,16 +94,18 @@
 
   // Falsche Antwortmöglichkeiten: bei mehreren Formen auch vertauschte Formen.
   function options(d, c) {
-    const right = ans(d, c), correct = right.join(' – ');
+    // shortOptions: In Multiple Choice nur die erste Schreibweise zeigen (z. B. bei "get on with/get along with")
+    const short = !!base(d).shortOptions, show = x => short ? splitVar(x)[0] : x;
+    const right = ans(d, c), correct = right.map(show).join(' – ');
     // Eigene Falsch-Antworten der Karte oder Antwort-Pool des Stoffpakets (z. B. Zeitformen)
-    if (c.w) return shuffle([right.map(x => x.split('/')[0]).join(' – '), ...c.w.slice(0, 3)]);
+    if (c.w) return shuffle([right.map(x => splitVar(x)[0]).join(' – '), ...c.w.slice(0, 3)]);
     const pool = base(d).pool;
     if (pool) return shuffle([correct, ...shuffle(pool.filter(p => !matches(d, c, p))).slice(0, 3)]);
     // Eine Falsch-Antwort darf nie auch richtig sein (z. B. "got – got" bei got/gotten).
     const isRight = t => t.split(' – ').every((p, k) => right[k] != null && variants(right[k]).includes(norm(p)));
     const wrong = [];
     if (right.length > 1) {
-      const first = x => x.split('/')[0];
+      const first = x => splitVar(x)[0];
       const cand = [
         right.map(() => first(right[0])),
         right.map((_, i) => first(right[Math.min(i + 1, right.length - 1)])),
@@ -103,7 +114,7 @@
       shuffle(cand).forEach(t => { if (!isRight(t) && !wrong.includes(t) && wrong.length < 2) wrong.push(t); });
     }
     for (const o of shuffle(cardsOf(base(d)))) {
-      const t = ansText(d, o);
+      const t = ans(d, o).map(show).join(' – ');
       if (wrong.length >= 3) break;
       if (o.i !== c.i && !isRight(t) && !wrong.includes(t)) wrong.push(t);
     }
@@ -212,6 +223,8 @@
   }
 
   function start(d, key) {
+    cfg.looseAccents = !!base(d).looseAccents;
+    cfg.mathInput = !!base(d).mathInput;
     if (!cardsOf(d).length) return goBack(d);
     if (key === 'pairs') return pairs(d);
     if (key === 'timed') return timed(d);
@@ -273,7 +286,7 @@
       inputs.forEach((inp, k) => {
         inp.readOnly = true;
         inp.classList.add(res[k] ? 'ok' : 'no');
-        if (!res[k]) inp.parentNode.append(h('div', { class: 'sol' }, '✔ ' + sol[k].split('/').join('  oder  ')));
+        if (!res[k]) inp.parentNode.append(h('div', { class: 'sol' }, '✔ ' + splitVar(sol[k]).join('  oder  ')));
       });
       if (!allOk) buzz(60);
       rate(d, c, allOk);
