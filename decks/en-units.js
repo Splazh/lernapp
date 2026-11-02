@@ -38,6 +38,6 @@
     ['von der Schule verweisen', 'expel'], ['Eingreifen, Intervention', 'intervention'], ['Opfer', 'victim'],
     ['Kernfamilie (Eltern und Kinder)', 'nuclear family'], ['Stiefvater', 'stepfather'], ['Pflegefamilie', 'foster family'], ['Waise', 'orphan'], ['Abstammung, Vorfahren', 'ancestry'],
     ['Nachkommen', 'descendants'], ['Großfamilie (mit Großeltern und weiteren Verwandten)', 'extended family'], ['die Scheidung einreichen', 'apply for a divorce'],
-    ['einen eigenen Haushalt gründen', 'set up one's own household'], ['Urgroßmutter', 'great-grandmother'], ['Urgroßeltern', 'great-grandparents'], ['Großonkel', 'great-uncle']
+    ['einen eigenen Haushalt gründen', "set up one's own household"], ['Urgroßmutter', 'great-grandmother'], ['Urgroßeltern', 'great-grandparents'], ['Großonkel', 'great-uncle']
   ]);
 })();
