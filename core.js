@@ -2,7 +2,7 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 21 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 22 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
@@ -173,7 +173,7 @@
     return t;
   };
   const variants = s => splitVar(s).map(norm);
-  const fieldOk = (input, solution) => variants(solution).includes(norm(input));
+  const fieldOk = (input, solution) => variants(solution).includes(norm(input)) || norm(solution) === norm(input);
 
   // Passt ein Auswahltext zur richtigen Antwort? Erlaubt sind jede einzelne Variante und die ganze Schreibweise (z. B. "got/gotten").
   const matches = (d, c, t) => { const r = ans(d, c), p = t.split(' – '); return p.length === r.length && p.every((x, k) => variants(r[k]).includes(norm(x)) || norm(x) === norm(r[k])); };
@@ -218,8 +218,30 @@
     const tense = !own && DECKS.find(x => x.title === c.a[0] && x.info && x.info.kurz);   // "Zeitform erkennen": Antwort ist der Name einer Zeitform
     if (tense) out.push(tense.info.kurz + (tense.info.signals ? ' Signalwörter: ' + tense.info.signals : ''));
     const f = filled(d, c); if (f) out.push('Beispiel: ' + f);
+    if (!own && c.a.length === 1 && c.q.includes('___')) {   // Lückensatz: der ganze Satz und die Regel dazu
+      const tag = (c.q.match(/\[([^\]]+)\]\s*$/) || [])[1];
+      const q = c.q.replace(/\s*\[[^\]]+\]\s*$/, '').replace(/___\s*\([^)]*\)/, '___');
+      out.push('Ganzer Satz: ' + q.replace('___', splitVar(c.a[0])[0]));
+      const rule = (tag && DECKS.find(x => x.title === tag && x.info && x.info.kurz)) || (b.info && b.info.kurz ? b : null);
+      if (rule) out.push('Regel: ' + rule.info.kurz + (rule.info.tip ? ' Merke: ' + rule.info.tip : ''));
+    }
+    if (!own && c.a.length === 3 && (b.labels || []).includes('Past Participle')) out.push(verbPattern(c.a));
     if (!out.length && b.info && b.info.tip) out.push('Merke: ' + b.info.tip);
     return out;
+  }
+  // Muster der unregelmäßigen Verben (Infinitive, Past Simple, Past Participle)
+  function verbPattern(a) {
+    const f = x => x.split('/')[0], i = f(a[0]), p = f(a[1]), n = f(a[2]);
+    const both = /\//.test(a[1] + a[2]) ? ' Beide Schreibweisen (britisch und amerikanisch) sind richtig.' : '';
+    if (i === p && p === n) return 'Alle drei Formen sind gleich (' + i + '). Du musst dir nur eine Form merken.' + both;
+    if (i === n) return 'Infinitive und Past Participle sind gleich (' + i + ' – ' + p + ' – ' + n + '). Nur das Past Simple ist anders.' + both;
+    if (p === n && /(ought|aught)$/.test(p)) return 'Gruppe -ought / -aught: Past Simple und Past Participle sind gleich (' + p + '), egal wie der Infinitiv aussieht.' + both;
+    if (p === n) return 'Past Simple und Past Participle sind gleich (' + p + '). Du musst dir nur zwei Formen merken: ' + i + ' und ' + p + '.' + both;
+    const m = i.match(/^(.*?)i([^aeiou]*)$/);
+    if (m && p === m[1] + 'a' + m[2] && n === m[1] + 'u' + m[2]) return 'Muster i – a – u: ' + i + ' – ' + p + ' – ' + n + ' (wie sing – sang – sung, drink – drank – drunk).' + both;
+    if (/ew$/.test(p) && /wn$/.test(n)) return 'Muster -ew / -wn: ' + i + ' – ' + p + ' – ' + n + ' (wie know – knew – known, grow – grew – grown).' + both;
+    if (n === p + 'n' || n === p + 'en') return 'Das Past Participle ist das Past Simple plus -n bzw. -en (' + p + ' → ' + n + ').' + both;
+    return 'Diese drei Formen sind unregelmäßig und müssen gelernt werden (' + i + ' – ' + p + ' – ' + n + ').' + both;
   }
 
   // ---------- Navigation ----------
