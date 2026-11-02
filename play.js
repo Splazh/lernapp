@@ -121,7 +121,7 @@
       if (first.t.id === t.id && first.t.a !== t.a) {
         [first.e, e].forEach(x => { x.classList.remove('sel'); x.classList.add('done'); });
         left--; bar.style.width = Math.round((set.length - left) / set.length * 100) + '%';
-        if (left === 0) setTimeout(() => { bump(); S.xp += 30; save(); go(() => finish(d, set.length, moves, 'pairs')); }, 350);
+        if (left === 0) setTimeout(() => { bump(); LA.addXp(30); save(); go(() => finish(d, set.length, moves, 'pairs')); }, 350);
       } else {
         lock = true; buzz(40);
         [first.e, e].forEach(x => { x.classList.remove('sel'); x.classList.add('nope'); });
@@ -160,7 +160,7 @@
         clearInterval(LA.timer);
         const isBest = score > (S.best[d.id] || 0);
         if (isBest) S.best[d.id] = score;
-        S.xp += score * 2; save();
+        LA.addXp(score * 2); save();
         go(() => finish(d, score, 0, 'timed', isBest));
       }
     }, 1000);
@@ -168,6 +168,7 @@
 
   // ---------- Ergebnis ----------
   function finish(d, right, total, key, isBest) {
+    if (LA.onRound) LA.onRound(key, right, total, d);
     let pct, center, title, sub;
     if (key === 'timed') {
       const best = S.best[d.id] || right;

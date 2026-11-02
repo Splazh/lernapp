@@ -50,9 +50,9 @@
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
       h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + NAME + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      hero, ui.nextTest ? ui.nextTest() : '',
+      hero, ui.nextTest ? ui.nextTest() : '', ui.questCard ? ui.questCard() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
-        stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / 100 XP')),
+        stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
       head('Deine Fächer', toggle), wrap);
     fill();
   }
@@ -160,26 +160,6 @@
       recent.length ? h('div', { class: 'list' }, recent.map(deckRow)) : h('p', { class: 'empty' }, 'Noch nichts geübt. Such dir im Tab Lernen ein Thema aus.'));
   }
 
-  // ---------- Erfolge ----------
-  function awards() {
-    const t = answersTotal(), lv = levelInfo(), bestPts = Math.max(0, ...Object.values(S.best || {}));
-    const B = [
-      ['🌱', 'Erster Schritt', 'Beantworte deine erste Karte', t.seen, 1], ['🔥', 'Dranbleiberin', '3 Tage in Folge lernen', streakNow(), 3],
-      ['🏅', 'Wochenprofi', '7 Tage in Folge lernen', streakNow(), 7], ['⭐', 'XP-Sammlerin', '100 XP sammeln', S.xp, 100],
-      ['💎', 'Power-Lernerin', '500 XP sammeln', S.xp, 500], ['🧠', 'Karten-Meisterin', '25 Karten sicher gelernt', t.ok, 25],
-      ['🎓', 'Wissensdurst', '100 Karten sicher gelernt', t.ok, 100], ['🎯', 'Fehlerjägerin', '10 Fehler ausgebessert', S.fixed || 0, 10],
-      ['⚡', 'Rekordjägerin', '10 Punkte im Zeitspiel', bestPts, 10]];
-    const done = B.filter(x => x[3] >= x[4]).length;
-    view.append(
-      h('div', { class: 'topline' }, backBtn(() => go(profile, 'profile'))),
-      h('h1', { class: 'ttl' }, 'Erfolge'),
-      h('section', { class: 'card lvlcard' },
-        h('div', { class: 'ringwrap sm' }, LA.ring(lv.into, { size: 104, stroke: 10 }), h('div', { class: 'ringtxt' }, lv.lvl)),
-        h('div', { class: 'grow' }, h('strong', null, 'Level ' + lv.lvl), h('small', null, (100 - lv.into) + ' XP bis Level ' + (lv.lvl + 1)), h('small', null, done + ' von ' + B.length + ' Erfolgen'))),
-      h('div', { class: 'badges' }, B.map(([ico, t1, d1, v, g]) => h('div', { class: 'badgec' + (v >= g ? ' got' : '') },
-        h('span', { class: 'bico' }, ico), h('strong', null, t1), h('small', null, d1), bar(Math.min(100, Math.round(v / g * 100))), h('em', null, Math.min(v, g) + ' / ' + g)))));
-  }
-
   // ---------- Profil ----------
   function donut(items) {
     const NS = 'http://www.w3.org/2000/svg', size = 220, sw = 24, r = (size - sw) / 2, circ = 2 * Math.PI * r, n = items.length, seg = circ / n - 8;
@@ -207,11 +187,11 @@
       sure = false; LA.reset(); go(profile, 'profile');
     } }, 'Fortschritt zurücksetzen');
     view.append(
-      h('header', { class: 'pro' }, avatar('xl'), h('h1', null, NAME), h('span', { class: 'chip' }, 'Level ' + lv.lvl + ' · ' + S.xp + ' XP')),
+      h('header', { class: 'pro' }, avatar('xl'), h('h1', null, NAME), h('span', { class: 'chip' }, 'Level ' + lv.lvl + ' · ' + lv.title)),
       h('section', { class: 'card' }, h('div', { class: 'donutwrap' }, donut(items.map(x => ({ color: x.s.color, pct: x.st.pct }))),
         h('div', { class: 'ringtxt' }, h('b', null, allPct + '%'), h('small', null, 'sicher gelernt'))),
         h('div', { class: 'legend' }, items.map(x => h('div', { class: 'lg', style: '--c:' + x.s.color }, h('i', null), h('span', null, x.s.title), h('b', null, x.st.decks ? x.st.pct + ' %' : '–'))))),
-      h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: () => go(awards, 'profile') },
+      h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: () => go(() => ui.awards('profile'), 'profile') },
         tileIco('🏆'), h('span', { class: 'grow' }, 'Erfolge', h('small', null, 'Abzeichen und Level')), svg('chevron', 'chev')),
       h('div', { class: 'stats3 four' }, stat(streakNow(), 'Tage Serie'), stat(t.ok, 'Karten sicher'), stat(t.seen, 'Antworten'), stat(acc + ' %', 'Trefferquote')),
       h('div', { class: 'themeseg', role: 'group', 'aria-label': 'Darstellung' }, [['light', 'Hell'], ['dark', 'Dunkel'], ['auto', 'Auto']].map(([k, l]) =>
@@ -222,7 +202,7 @@
       resetBtn);
   }
 
-  Object.assign(ui, { home, subject, wrong, deck, info, practice, awards, profile });
+  Object.assign(ui, { home, subject, wrong, deck, info, practice, profile });
   go(home, 'learn');
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* offline-Modus optional */ });

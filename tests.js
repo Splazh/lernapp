@@ -10,7 +10,7 @@
     S.seeded = true;
     if (!S.tests) {
       S.tests = [
-        { id: newId(), subj: 'englisch', title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
+        { id: newId(), subj: 'englisch', seed: true, title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
           decks: ['en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },
         { id: newId(), subj: 'englisch', title: 'Englisch Test', date: '2026-11-11', stoff: '', decks: [] },
         { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-27', stoff: '', decks: [] }

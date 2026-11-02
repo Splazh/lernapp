@@ -8,7 +8,7 @@
   const view = document.getElementById('view');
 
   // ---------- Speicher ----------
-  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light' });
+  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: {}, day: null, week: null, maxStreak: 0 });
   const S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem('lernapp') || '{}')); } catch (e) { /* leer starten */ }
   const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; };
@@ -109,21 +109,37 @@
     for (const d of ds) { t += d.cards.length; m += mastered(d); seen += cardsOf(d).filter(c => st(d, c).seen > 0).length; }
     return { m, t, seen, decks: ds.length, pct: t ? Math.round(m / t * 100) : 0 };
   };
-  const levelInfo = () => ({ lvl: Math.floor(S.xp / 100) + 1, into: S.xp % 100 });
+  // Ränge: ab welchem Level welcher Titel gilt. Jedes Level braucht etwas mehr XP als das davor.
+  const RANKS = [[1, 'Frischling'], [3, 'Lernfuchs'], [5, 'Wissensjägerin'], [8, 'Karteikarten-Profi'], [12, 'Denkerin'], [16, 'Expertin'], [20, 'Meisterin'], [25, 'Mastermind'], [30, 'Matura-Legende']];
+  const needFor = l => 100 + 25 * (l - 1);
+  const levelInfo = (xp = S.xp) => {
+    let lvl = 1;
+    while (xp >= needFor(lvl)) { xp -= needFor(lvl); lvl++; }
+    return { lvl, into: xp, need: needFor(lvl), title: RANKS.filter(r => r[0] <= lvl).pop()[1] };
+  };
+  // Alle XP laufen hier durch, damit ein Levelaufstieg gemeldet wird.
+  function addXp(n) {
+    const before = levelInfo().lvl;
+    S.xp += n;
+    const now = levelInfo();
+    if (now.lvl > before && LA.toast) LA.toast('🆙', 'Level ' + now.lvl + ' erreicht!', now.title);
+  }
 
   // ---------- Fortschritt ----------
   const streakNow = () => (S.last === dayStr(Date.now()) || S.last === dayStr(Date.now() - 864e5)) ? S.streak : 0;
   function bump() {
     const t = dayStr(Date.now());
     if (S.last !== t) { S.streak = S.last === dayStr(Date.now() - 864e5) ? S.streak + 1 : 1; S.last = t; }
+    S.maxStreak = Math.max(S.maxStreak || 0, S.streak);
   }
   function rate(d, c, ok) {
     bump();
     const s = st(d, c), was = s.wrong;
     s.seen++;
     s.wrong = !ok;
-    if (ok) { s.right++; s.box = Math.min(4, s.box + 1); S.xp += 10; if (was) S.fixed = (S.fixed || 0) + 1; } else { s.box = 0; S.xp += 2; }
+    if (ok) { s.right++; s.box = Math.min(4, s.box + 1); addXp(10); if (was) S.fixed = (S.fixed || 0) + 1; } else { s.box = 0; addXp(2); }
     save();
+    if (LA.onRate) LA.onRate(d, c, ok, !!was);
   }
   const touch = d => { const id = base(d).id; S.recent = [id, ...(S.recent || []).filter(x => x !== id)].slice(0, 6); save(); };
   // Schwache Karten kommen häufiger dran.
@@ -195,7 +211,7 @@
     window.scrollTo(0, 0);
   }
 
-  Object.assign(LA, { bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  Object.assign(LA, { RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();
