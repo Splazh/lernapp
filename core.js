@@ -14,7 +14,8 @@
   const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; };
   applyTheme();
   const save = () => { try { localStorage.setItem('lernapp', JSON.stringify(S)); } catch (e) { /* ignorieren */ } };
-  const reset = () => { const th = S.theme; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), { theme: th || 'light' }); save(); };
+  // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
+  const reset = () => { const keep = { theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
 
   // ---------- Helfer ----------
   function h(tag, attrs, ...kids) {
@@ -36,6 +37,7 @@
     star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
     user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0',
     grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z', list: 'M4 6h16M4 12h16M4 18h16',
+    calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4', note: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6',
     check: 'M5 12.5l4.5 4.5L19 7.5', book: 'M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM8 4v13'
   };
   const svg = (name, cls) => {
@@ -67,6 +69,12 @@
     requestAnimationFrame(() => requestAnimationFrame(() => fg.setAttribute('stroke-dashoffset', circ * (1 - Math.max(0, Math.min(100, pct)) / 100))));
     return s;
   }
+  // Kleine Bausteine, die mehrere Seiten brauchen
+  const bar = pct => h('div', { class: 'bar' }, h('i', { style: 'width:' + pct + '%' }));
+  const backBtn = fn => h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Zurück', onclick: fn }, svg('back'));
+  const tileIco = (icon, cls) => h('span', { class: 'tile-ico ' + (cls || '') }, icon);
+  const head = (title, right) => h('div', { class: 'sechead' }, h('h2', null, title), right || '');
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const dayStr = t => new Date(t).toISOString().slice(0, 10);
   const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* egal */ } };
@@ -177,7 +185,7 @@
   }
 
   // ---------- Navigation ----------
-  // tab: 'learn' | 'practice' | 'awards' | 'profile' zeigt die Tab-Leiste, ohne tab ist sie versteckt (Lernen läuft).
+  // tab: 'learn' | 'plan' | 'practice' | 'notes' | 'profile' zeigt die Tab-Leiste, ohne tab ist sie versteckt (Lernen läuft).
   function go(fn, tab) {
     clearInterval(LA.timer);
     view.replaceChildren();
@@ -187,7 +195,7 @@
     window.scrollTo(0, 0);
   }
 
-  Object.assign(LA, { DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  Object.assign(LA, { bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();

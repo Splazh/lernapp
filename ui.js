@@ -2,24 +2,20 @@
 (() => {
   'use strict';
   const LA = window.LA;
-  const { h, svg, S, save, go, base, cardsOf, decksOf, subjectOf, wrongDeck, wrongCount, mastered, deckPct, subjectStats,
+  const { h, svg, S, save, go, bar, backBtn, tileIco, head, base, cardsOf, decksOf, subjectOf, wrongDeck, wrongCount, mastered, deckPct, subjectStats,
     levelInfo, streakNow, view, DECKS, SUBJECTS } = LA;
   const ui = LA.ui;
   const NAME = 'Lana';
 
   // ---------- Tab-Leiste ----------
-  const TABS = [['learn', 'Lernen', 'home'], ['practice', 'Üben', 'target'], ['awards', 'Erfolge', 'star'], ['profile', 'Profil', 'user']];
+  const TABS = [['learn', 'Lernen', 'home'], ['plan', 'Termine', 'calendar'], ['practice', 'Üben', 'target'], ['notes', 'Notizen', 'note'], ['profile', 'Profil', 'user']];
   const nav = document.getElementById('tabs');
-  const openTab = id => go(() => ({ learn: home, practice, awards, profile })[id](), id);
+  const openTab = id => go(() => ({ learn: home, plan: () => ui.plan(), practice, notes: () => ui.notes(), profile })[id](), id);
   TABS.forEach(([id, label, icon]) => nav.append(h('button', { class: 'tab', type: 'button', 'data-tab': id, onclick: () => openTab(id) }, svg(icon), h('span', null, label))));
   ui.markTab = tab => nav.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
 
   // ---------- Kleine Bausteine ----------
-  const bar = pct => h('div', { class: 'bar' }, h('i', { style: 'width:' + pct + '%' }));
-  const backBtn = fn => h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Zurück', onclick: fn }, svg('back'));
-  const tileIco = (icon, cls) => h('span', { class: 'tile-ico ' + (cls || '') }, icon);
   const avatar = cls => h('div', { class: 'avatar ' + (cls || ''), 'aria-hidden': 'true' }, NAME[0]);
-  const head = (title, right) => h('div', { class: 'sechead' }, h('h2', null, title), right || '');
   const answersTotal = () => {
     let seen = 0, right = 0, ok = 0;
     for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (c.box >= 3) ok++; }
@@ -54,12 +50,14 @@
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
       h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + NAME + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      hero,
+      hero, ui.nextTest ? ui.nextTest() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / 100 XP')),
       head('Deine Fächer', toggle), wrap);
     fill();
   }
+
+  const noteCount = sub => (S.notes || []).filter(n => n.subj === sub.id).length;
 
   // ---------- Fach ----------
   function subject(sub) {
@@ -75,6 +73,8 @@
         h('div', { class: 'grow' }, h('h1', null, sub.title), h('p', { class: 'lead' }, ds.length ? ds.length + ' Themen · ' + t.pct + ' % gelernt' : 'Hier kommt bald Stoff rein.')),
         LA.ring(t.pct, { size: 58, stroke: 7, color: sub.color })),
       h('div', { class: 'list', style: '--c:' + sub.color }, rows,
+        h('button', { class: 'deck', type: 'button', onclick: () => go(() => ui.notes(sub.id), 'notes') },
+          tileIco('📝'), h('span', { class: 'grow' }, 'Notizen', h('small', null, noteCount(sub) ? noteCount(sub) + ' zu ' + sub.title : 'Eigene Notizen zu ' + sub.title)), svg('chevron', 'chev')),
         h('button', { class: 'deck warn' + (w ? ' has' : ''), type: 'button', onclick: () => go(() => ui.wrong(sub), 'learn') },
           tileIco('❌'), h('span', { class: 'grow' }, 'Falsche Antworten', h('small', null, w ? w + ' zum Nochmal-Üben' : 'Noch keine, stark!')), svg('chevron', 'chev'))));
   }
@@ -171,6 +171,7 @@
       ['⚡', 'Rekordjägerin', '10 Punkte im Zeitspiel', bestPts, 10]];
     const done = B.filter(x => x[3] >= x[4]).length;
     view.append(
+      h('div', { class: 'topline' }, backBtn(() => go(profile, 'profile'))),
       h('h1', { class: 'ttl' }, 'Erfolge'),
       h('section', { class: 'card lvlcard' },
         h('div', { class: 'ringwrap sm' }, LA.ring(lv.into, { size: 104, stroke: 10 }), h('div', { class: 'ringtxt' }, lv.lvl)),
@@ -210,6 +211,8 @@
       h('section', { class: 'card' }, h('div', { class: 'donutwrap' }, donut(items.map(x => ({ color: x.s.color, pct: x.st.pct }))),
         h('div', { class: 'ringtxt' }, h('b', null, allPct + '%'), h('small', null, 'sicher gelernt'))),
         h('div', { class: 'legend' }, items.map(x => h('div', { class: 'lg', style: '--c:' + x.s.color }, h('i', null), h('span', null, x.s.title), h('b', null, x.st.decks ? x.st.pct + ' %' : '–'))))),
+      h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: () => go(awards, 'profile') },
+        tileIco('🏆'), h('span', { class: 'grow' }, 'Erfolge', h('small', null, 'Abzeichen und Level')), svg('chevron', 'chev')),
       h('div', { class: 'stats3 four' }, stat(streakNow(), 'Tage Serie'), stat(t.ok, 'Karten sicher'), stat(t.seen, 'Antworten'), stat(acc + ' %', 'Trefferquote')),
       h('div', { class: 'themeseg', role: 'group', 'aria-label': 'Darstellung' }, [['light', 'Hell'], ['dark', 'Dunkel'], ['auto', 'Auto']].map(([k, l]) =>
         h('button', { type: 'button', class: (S.theme || 'light') === k ? 'on' : '', onclick: e => {
