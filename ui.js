@@ -50,7 +50,7 @@
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
       h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.questCard ? ui.questCard() : '',
+      hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.backupHint ? ui.backupHint() : '', ui.questCard ? ui.questCard() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
       head('Deine Fächer', toggle), wrap);
@@ -75,6 +75,7 @@
       h('div', { class: 'list', style: '--c:' + sub.color }, rows,
         h('button', { class: 'deck', type: 'button', onclick: () => go(() => ui.notes(sub.id), 'notes') },
           tileIco('📝'), h('span', { class: 'grow' }, 'Notizen', h('small', null, noteCount(sub) ? noteCount(sub) + ' zu ' + sub.title : 'Eigene Notizen zu ' + sub.title)), svg('chevron', 'chev')),
+        LA.openRow ? LA.openRow(sub.id) : '', LA.mineRow ? LA.mineRow(sub.id) : '',
         h('button', { class: 'deck warn' + (w ? ' has' : ''), type: 'button', onclick: () => go(() => ui.wrong(sub), 'learn') },
           tileIco('❌'), h('span', { class: 'grow' }, 'Falsche Antworten', h('small', null, w ? w + ' zum Nochmal-Üben' : 'Noch keine, stark!')), svg('chevron', 'chev'))));
   }
@@ -101,6 +102,7 @@
     { key: 'timed', ico: '⏱️', t: 'Zeitspiel', d: '60 Sekunden, so viele wie möglich.' },
     { key: 'tf', ico: '⚖️', t: 'Richtig oder falsch', d: 'Stimmt die Aussage? Tippe Richtig oder Falsch.' },
     { key: 'gap', ico: '✏️', t: 'Lücken füllen', d: 'Ergänze das fehlende Wort oder die fehlenden Buchstaben.', ok: d => !LA.base(d).mathInput && cardsOf(LA.base(d)).filter(c => LA.ans(d, c).join(' ').length <= 32).length >= cardsOf(LA.base(d)).length * .6 },
+    { key: 'bank', ico: '🏦', t: 'Wortbank', d: 'Ziehe Wörter aus dem Kasten in die Lücken. Zwei sind zu viel.', ok: d => !!LA.hasBank && LA.hasBank(d) },
     { key: 'order', ico: '🔀', t: 'Reihenfolge', d: 'Bringe Wörter oder Schritte in die richtige Reihenfolge.', ok: d => !!LA.hasOrder && LA.hasOrder(d) }
   ];
   function deck(d) {
@@ -158,6 +160,8 @@
         h('small', null, total ? 'in ' + rows.length + (rows.length === 1 ? ' Fach' : ' Fächern') + ' zum Nochmal-Üben' : 'Keine offen. Gut gemacht.'))),
       ...(total ? [h('div', { class: 'list' }, rows.map(x => h('button', { class: 'deck warn has', type: 'button', onclick: () => go(() => ui.wrong(x.s), 'learn') },
         tileIco(x.s.icon), h('span', { class: 'grow' }, x.s.title, h('small', null, x.w + ' Karten')), svg('chevron', 'chev'))))] : []),
+      LA.openSubjects && LA.openSubjects().length ? head('Offene Fragen') : '', LA.openSubjects && LA.openSubjects().length ? h('div', { class: 'list' }, LA.openSubjects().map(s => LA.openRow(s.id))) : '',
+      LA.mineAll ? LA.mineAll() : '',
       weak.length ? head('Hier lohnt sich Üben') : '', weak.length ? h('div', { class: 'list' }, weak.map(deckRow)) : '',
       head('Zuletzt geübt'),
       recent.length ? h('div', { class: 'list' }, recent.map(deckRow)) : h('p', { class: 'empty' }, 'Noch nichts geübt. Such dir im Tab Lernen ein Thema aus.'));
@@ -209,6 +213,11 @@
       h('div', { class: 'themeseg', role: 'group', 'aria-label': 'Darstellung' }, [['light', 'Hell'], ['dark', 'Dunkel'], ['auto', 'Auto']].map(([k, l]) =>
         h('button', { type: 'button', class: (S.theme || 'light') === k ? 'on' : '', onclick: e => {
           S.theme = k; save(); LA.applyTheme();
+          e.currentTarget.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on');
+        } }, l))),
+      h('div', { class: 'themeseg', role: 'group', 'aria-label': 'Schriftgröße' }, [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']].map(([k, l]) =>
+        h('button', { type: 'button', class: (S.fs || 'normal') === k ? 'on' : '', onclick: e => {
+          S.fs = k; save(); LA.applyTheme();
           e.currentTarget.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on');
         } }, l))),
       h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: shareApp }, tileIco('💌'), h('span', { class: 'grow' }, 'App weitergeben', h('small', null, 'Link an eine Freundin schicken')), svg('chevron', 'chev')),

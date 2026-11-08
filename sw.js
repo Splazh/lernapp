@@ -1,6 +1,6 @@
 // Offline-Cache: erst Netz (damit Updates ankommen), sonst Cache.
-const CACHE = 'lernapp-v29';
-const FILES = ['./', 'index.html', 'style.css', 'core.js', 'play.js', 'play2.js', 'tests.js', 'notes.js', 'quests.js', 'backup.js', 'study.js', 'ui.js', 'manifest.webmanifest',
+const CACHE = 'lernapp-v30';
+const FILES = ['./', 'index.html', 'style.css', 'core.js', 'play.js', 'play2.js', 'tests.js', 'notes.js', 'quests.js', 'backup.js', 'study.js', 'open.js', 'mine.js', 'games.js', 'decks/open-geo.js', 'ui.js', 'manifest.webmanifest',
   'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'decks/subjects.js', 'decks/irregular-verbs.js',
   'decks/en-wortschatz.js', 'decks/en-units.js', 'decks/en-formate.js', 'decks/en-sa.js','decks/deutsch.js', 'decks/spanisch.js', 'decks/mathe.js',
   'decks/geografie.js', 'decks/geo-test2.js', 'decks/ethik.js', 'decks/informatik.js', 'decks/sentences.js', 'decks/explanations-geo.js', 'decks/explanations-de.js', 'decks/explanations-ma.js', 'decks/explanations-es.js', 'decks/explanations-ei.js', 'decks/explanations-en.js', 'decks/tenses-einzeln.js', 'decks/tenses-buch.js', 'decks/tenses-erkennen.js', 'decks/tenses-luecken.js'];

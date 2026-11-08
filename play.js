@@ -60,7 +60,7 @@
 
   // ---------- Karteikarten ----------
   function flash(d, c, n, i, done) {
-    const front = h('div', { class: 'face front' }, h('div', { class: 'q' }, prompt(d, c)), h('div', { class: 'hint' }, 'Tippen zum Umdrehen'));
+    const front = h('div', { class: 'face front' }, c.img ? h('img', { class: 'qimg', src: c.img, alt: 'Bild zur Frage' }) : '', h('div', { class: 'q' }, prompt(d, c)), h('div', { class: 'hint' }, 'Tippen zum Umdrehen'));
     const back = h('div', { class: 'face back' }, h('div', { class: 'hint' }, prompt(d, c)),
       ans(d, c).flatMap((a, k) => [h('div', { class: 'lab' }, labels(d)[k] || ''), h('div', { class: 'val' }, a)]));
     const card = h('button', { class: 'flip', type: 'button' }, front, back);

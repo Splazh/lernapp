@@ -379,3 +379,21 @@ html[data-fs="xl"] #app { zoom: 1.25; }
 .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: conf 1.9s ease-in forwards; }
 @keyframes conf { to { transform: translateY(105vh) rotate(540deg); opacity: .9; } }
 .lives { text-align: center; font-size: 22px; letter-spacing: 4px; margin: 6px 0 0; }
+
+.checks { display: grid; gap: 10px; margin: 10px 0; }
+.chk { display: flex; gap: 12px; align-items: flex-start; }
+.chk input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--pri); }
+textarea { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 12px 14px; resize: vertical; }
+
+.mineitem { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.mineitem .grow { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+
+.bank { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
+.chipw { min-height: 44px; padding: 0 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: 700 16px var(--font); }
+.chipw.sel { border-color: var(--pri); background: var(--pri-soft); }
+.gaps { display: grid; gap: 16px; }
+.gapline { margin: 0; line-height: 2.1; font-size: 18px; }
+.slot { min-width: 84px; min-height: 40px; padding: 0 12px; border-radius: 12px; border: 2px dashed var(--line); background: var(--surface); color: var(--muted); font: 700 16px var(--font); margin: 0 4px; }
+.slot.full { border-style: solid; border-color: var(--pri); color: var(--ink); }
+.slot.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)); }
+.slot.no { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--surface)); }
