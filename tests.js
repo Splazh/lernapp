@@ -7,7 +7,7 @@
 
   // Schularbeit Englisch 11.11.: 45 Min, Listening, Reading, 2 x Language in Use, Thema Family and Friends.
   const SA_STOFF = '45 Minuten: 1 x Listening, 1 x Reading, 2 x Language in Use (Thema Family and Friends). Wortschatz Unit 1 und 2, Present und Past Simple/Continuous.';
-  const SA_DECKS = ['en-sa-aufbau', 'en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 'en-sa-peer', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 't-used-to', 'irregular-verbs', 'en-sa-gapfill', 'en-sa-mc', 'en-word-formation', 'en-srdp-formate'];
+  const SA_DECKS = ['en-sa-aufbau', 'en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 'en-sa-peer', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 't-used-to', 'irregular-verbs', 'en-sa-gapfill', 'en-sa-mc', 'en-sa-oddone', 'en-sa-pastgap', 'en-sa-bullying-mc', 'en-word-formation', 'en-srdp-formate'];
   // Beim ersten Start: die drei bekannten Termine, damit Lana nicht bei null anfängt.
   if (!S.seeded) {
     S.seeded = true;
@@ -25,6 +25,8 @@
   const tests = () => (S.tests = S.tests || []);
   // Schon gespeicherter, noch leerer Englisch-Test vom 11.11.: Stoff und Themen eintragen.
   (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && !(t.decks || []).length).forEach(t => { t.decks = SA_DECKS.slice(); if (!t.stoff) t.stoff = SA_STOFF; save(); });
+  // Neue Schularbeit-Themen auch in den schon befüllten Test aufnehmen.
+  (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && (t.decks || []).includes('en-sa-aufbau')).forEach(t => { SA_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
   // Neue Wortschatz-Themen auch in den schon gespeicherten Check-Up aufnehmen.
   (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
 

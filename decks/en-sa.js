@@ -84,4 +84,54 @@
     ['Opfer', 'victim'], ['Täter(in), Schikanierer(in)', 'bully'], ['Zuhören', 'listen'], ['Streit schlichten', 'settle an argument'],
     ['sich ausgeschlossen fühlen', 'feel left out'], ['jemandem zur Seite stehen, unterstützen', 'support']
   ]);
+
+  // Aufgabentypen wie im Buch (Topic 1, Extra material S. 40-43 und Test yourself S. 44-45), aber mit eigenen Wörtern und Sätzen.
+  add('en-sa-oddone', 'Odd one out (Wortschatz)', '🧩', ['Antwort'], {
+    kurz: 'Welches Wort passt nicht zu den anderen?',
+    use: ['Im Buch (Extra material, Aufgabe 3) musst du das Wort unterstreichen und begründen, warum es nicht passt.'],
+    tip: 'Überlege zuerst, was die anderen Wörter gemeinsam haben: Verwandtschaft, Gefühle, Probleme, Hausarbeit, Charakter.'
+  }, [
+    ['mother – uncle – niece – neighbour – cousin', 'neighbour', { w: ['uncle', 'niece', 'cousin'] }],
+    ['sister-in-law – nephew – great-grandfather – stepbrother – classmate', 'classmate', { w: ['nephew', 'stepbrother', 'sister-in-law'] }],
+    ['mentor – counsellor – guide – bully – role model', 'bully', { w: ['mentor', 'guide', 'role model'] }],
+    ['argument – fight – quarrel – friendship – row', 'friendship', { w: ['fight', 'quarrel', 'row'] }],
+    ['cooking – washing-up – ironing – housework – bills', 'bills', { w: ['cooking', 'ironing', 'washing-up'] }],
+    ['cheerful – easy-going – laid back – grumpy – relaxed', 'grumpy', { w: ['cheerful', 'laid back', 'relaxed'] }],
+    ['household – parent – sibling – grandchild – daughter', 'household', { w: ['parent', 'sibling', 'daughter'] }],
+    ['apologize – forgive – excuse – victimize – make up', 'victimize', { w: ['apologize', 'forgive', 'make up'] }]
+  ]);
+
+  add('en-sa-pastgap', 'Past Simple: Mini-Text', '📖', ['Lücke'], {
+    kurz: 'Setze das Verb im Past Simple ein, wie bei A tale of two friendships im Buch.',
+    form: [
+      'Regelmäßig: Grundform + -ed (share → shared, try → tried, stop → stopped).',
+      'Unregelmäßig: zweite Form (come → came, get → got, be → was/were).',
+      'Verneinung und Frage: did not + Grundform, Did ... + Grundform.'
+    ],
+    tip: 'Nach did/didn\'t steht immer die Grundform: She didn\'t come, nicht "didn\'t came".'
+  }, [
+    ['Last summer my cousin ___ (live) with us for a month.', 'lived', { w: ['lives', 'was living', 'live'] }],
+    ['We ___ (share) a room and ___ (become) good friends.', 'shared / became', { w: ['shared / become', 'share / became', 'sharing / became'] }],
+    ['He ___ (not/like) the new school at first.', "didn't like", { w: ["didn't liked", "wasn't like", "doesn't like"] }],
+    ['The older boys ___ (make) fun of him every day.', 'made', { w: ['maked', 'make', 'were make'] }],
+    ['I ___ (try) to help him, but he ___ (not/want) to talk.', "tried / didn't want", { w: ["tryed / didn't want", "tried / didn't wanted", 'tried / not wanted'] }],
+    ['___ you ___ (tell) your parents about it?', 'Did / tell', { w: ['Did / told', 'Do / tell', 'Were / tell'] }],
+    ['In the end, a teacher ___ (find) out and ___ (stop) the bullying.', 'found / stopped', { w: ['finded / stopped', 'found / stoped', 'find / stopped'] }],
+    ['Since then, the two of them ___ (get) on very well.', 'got', { w: ['get', 'getted', 'were getting'] }]
+  ]);
+
+  add('en-sa-bullying-mc', 'Multiple Choice: Bullying-Text', '🛡️', ['Antwort'], {
+    kurz: 'Lückentext-Aufgabe wie Language in use im Buch (Extra material, Aufgabe 5), mit eigenen Sätzen.',
+    use: ['Prüfe bei jeder Lücke: Welche Wortart fehlt? Welche feste Verbindung (many forms, put up with, be critical of) passt?'],
+    tip: 'Achte auf Präpositionen nach Verben und Adjektiven: critical of, worried about, scared of.'
+  }, [
+    ['Bullying can take many ___: it may be physical, verbal or online.', 'forms', { w: ['power', 'fear', 'size'] }],
+    ['A bully often uses his or her ___ over others to scare them.', 'power', { w: ['hope', 'fear', 'kind'] }],
+    ['Nobody should have to put ___ with bullying.', 'up', { w: ['out', 'on', 'off'] }],
+    ['You have the ___ to feel safe at school.', 'right', { w: ['hope', 'fear', 'forms'] }],
+    ['Don\'t be ___ to ask a teacher for help.', 'afraid', { w: ['nasty', 'harmful', 'critical'] }],
+    ['Be careful with jokes: what seems ___ to you may hurt someone else.', 'funny', { w: ['scared', 'worried', 'critical'] }],
+    ['Cyberbullying is bullying ___ online media.', 'through', { w: ['from', 'out of', 'for'] }],
+    ['Some students are ___ about being left out of the group.', 'worried', { w: ['critical', 'harmful', 'positive'] }]
+  ]);
 })();
