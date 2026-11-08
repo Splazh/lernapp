@@ -85,7 +85,7 @@
   // ---------- Abzeichen ----------
   const tot = () => {
     let seen = 0, right = 0, ok = 0;
-    for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (c.box >= 3) ok++; }
+    for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (LA.sure(c)) ok++; }
     return { seen, right, ok };
   };
   const deckById = id => DECKS.find(d => d.id === id);

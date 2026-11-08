@@ -50,6 +50,7 @@
   // Themen, die zum Fach gehören, aber vielleicht noch nicht im Test dran sind, zählen nicht für die Bereitschaft.
   const decksOfTest = t => (t.decks || []).filter(id => !skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
   const laterOfTest = t => (t.decks || []).filter(id => skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
+  LA.testDecks = decksOfTest;
   const readiness = t => {
     const ds = decksOfTest(t), total = ds.reduce((n, d) => n + d.cards.length, 0), ok = ds.reduce((n, d) => n + mastered(d), 0);
     return { total, ok, pct: total ? Math.round(ok / total * 100) : 0, has: ds.length > 0 };
@@ -114,11 +115,13 @@
         h('div', { class: 'big' }, n >= 0 ? (n === 0 ? 'Heute' : n) : '–'), h('div', { class: 'grow' }, h('strong', null, n >= 0 ? (n === 0 ? 'Test ist heute. Viel Erfolg!' : n === 1 ? 'Tag bis zum Test' : 'Tage bis zum Test') : 'Dieser Test war ' + when(t).toLowerCase()),
           h('small', null, r.has ? (left > 0 && n > 0 ? 'Noch ' + left + ' Karten sicher lernen, das sind etwa ' + perDay + ' pro Tag.' : left > 0 ? 'Noch ' + left + ' Karten nicht sicher.' : 'Alles sicher gelernt. Stark!') : 'Verknüpfe unten Themen aus der App.'))),
       t.stoff ? h('section', { class: 'card info' }, h('h3', null, 'Stoff'), h('p', { class: 'stoff' }, t.stoff)) : '',
+      ds.length ? head('Gezielt üben') : '', ds.length && LA.study ? LA.study.testCard(t) : '',
       ds.length ? head('Themen für den Test') : '', ds.length ? h('div', { class: 'list' }, byWeak.map(d => deckRow(d, false))) : '',
       later.length ? head('Auch Stoff, aber für den Test weniger wichtig') : '',
       later.length ? h('p', { class: 'lead', style: 'margin:-6px 0 12px' }, 'Das musst du auch lernen, es kommt aber vermutlich später oder nur am Rand dran. Lerne zuerst die Themen oben, die zählen für die Bereitschaft.') : '',
       later.length ? h('div', { class: 'list' }, later.map(d => deckRow(d, true))) : '',
       h('button', { class: 'linkbtn', type: 'button', onclick: () => go(() => form(t), 'plan') }, ds.length ? 'Stoff und Themen ändern' : 'Stoff und Themen eintragen'),
+      LA.study ? h('button', { class: 'linkbtn', type: 'button', onclick: () => LA.study.ics(t) }, 'Test in den Kalender eintragen (.ics)') : '',
       del,
       ds.length ? h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => go(() => ui.deck(via(weakest))) },
         'Schwächstes Thema üben')) : '');

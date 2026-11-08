@@ -2,22 +2,29 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 28 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 29 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
 
   // ---------- Speicher ----------
-  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: {}, day: null, week: null, maxStreak: 0 });
+  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: {}, day: null, week: null, maxStreak: 0, freeze: 0, mine: {}, open: {}, fs: 'normal' });
   const S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem('lernapp') || '{}')); } catch (e) { /* leer starten */ }
   // Bestehende Nutzerin (vor der Namensfrage): Name Lana übernehmen. Neue Nutzer werden beim Start nach ihrem Namen gefragt.
   if (!S.name && (S.xp > 0 || S.last || (S.tests || []).length)) S.name = 'Lana';
-  const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; };
+  const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; document.documentElement.dataset.fs = S.fs || 'normal'; };
   applyTheme();
+  // Lernplan nach Datum: Tag als Zahl (lokale Zeit) und Abstände je Lernbox (Tage bis zur nächsten Wiederholung).
+  const dnum = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+  const INTERVALS = [0, 1, 2, 4, 8];
+  // "Sicher" heißt: Box 3 oder höher UND an mindestens 2 verschiedenen Tagen richtig beantwortet.
+  const sure = s => !!s && s.box >= 3 && (s.nd || 0) >= 2;
+  // Einmalig: Karten, die vorher schon als sicher galten, bleiben sicher.
+  if (!S.srs) { for (const o of Object.values(S.cards || {})) for (const s of Object.values(o)) if (s && s.box >= 3 && s.nd == null) s.nd = 2; S.srs = 1; }
   const save = () => { try { localStorage.setItem('lernapp', JSON.stringify(S)); } catch (e) { /* ignorieren */ } };
   // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
-  const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
+  const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded, mine: S.mine, fs: S.fs }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
 
   // Stand aus einer Sicherung einsetzen (die Daten wurden vorher in backup.js geprüft).
   const restore = d => { for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), d); save(); };
@@ -90,7 +97,7 @@
   const cardsOf = d => d.cards.map((r, i) => {
     // Letztes Feld kann ein Zusatz-Objekt sein: { w: [falsche Antworten], e: 'Erklärung' }
     const m = r.length > 2 && r[r.length - 1] && typeof r[r.length - 1] === 'object' ? r[r.length - 1] : null;
-    return { i, q: r[0], a: r.slice(1, m ? -1 : undefined), w: m ? m.w || null : null, e: m ? m.e : undefined };
+    return { i, q: r[0], a: r.slice(1, m ? -1 : undefined), w: m ? m.w || null : null, e: m ? m.e : undefined, img: m ? m.img : undefined };
   }).filter(c => !d.filter || d.filter(c));
   const decksOf = sub => DECKS.filter(d => d.subject === sub.id);
   const subjectOf = d => SUBJECTS.find(s => s.id === base(d).subject);
@@ -106,7 +113,7 @@
   const ans = (d, c) => c.a.slice(opt(d).skip);
   const labels = d => d.labels.slice(opt(d).skip);
   const ansText = (d, c) => ans(d, c).join(' – ');
-  const mastered = d => cardsOf(base(d)).filter(c => st(d, c).box >= 3).length;
+  const mastered = d => cardsOf(base(d)).filter(c => sure(st(d, c))).length;
   const deckPct = d => { const n = base(d).cards.length; return n ? Math.round(mastered(d) / n * 100) : 0; };
   // Zahlen pro Fach: sicher gelernt, gesamt, schon geübt
   const subjectStats = sub => {
@@ -132,10 +139,19 @@
   }
 
   // ---------- Fortschritt ----------
-  const streakNow = () => (S.last === dayStr(Date.now()) || S.last === dayStr(Date.now() - 864e5)) ? S.streak : 0;
+  // Abstand in Tagen zwischen dem letzten Lerntag und heute. Ein verpasster Tag (Abstand 2) wird vom Serien-Schutz aufgefangen.
+  const gapDays = () => S.last ? Math.round((Date.parse(dayStr(Date.now())) - Date.parse(S.last)) / 864e5) : 99;
+  const streakNow = () => { const g = gapDays(); return g <= 1 || (g === 2 && (S.freeze || 0) > 0) ? S.streak : 0; };
   function bump() {
     const t = dayStr(Date.now());
-    if (S.last !== t) { S.streak = S.last === dayStr(Date.now() - 864e5) ? S.streak + 1 : 1; S.last = t; }
+    if (S.last !== t) {
+      const g = gapDays();
+      if (g === 1) S.streak++;
+      else if (g === 2 && (S.freeze || 0) > 0) { S.freeze--; S.streak++; if (LA.toast) LA.toast('🧊', 'Serien-Schutz benutzt', 'Dein gestern verpasster Tag zählt trotzdem.'); }
+      else S.streak = 1;
+      S.last = t;
+      if (S.streak > 0 && S.streak % 7 === 0 && (S.freeze || 0) < 2) { S.freeze = (S.freeze || 0) + 1; if (LA.toast) LA.toast('🧊', 'Serien-Schutz verdient', 'Er rettet dir einen verpassten Tag.'); }
+    }
     S.maxStreak = Math.max(S.maxStreak || 0, S.streak);
   }
   // soft = Raten ist möglich (Richtig/Falsch): richtig zählt nur halb und schiebt die Karte nicht weiter.
@@ -144,14 +160,21 @@
     const s = st(d, c), was = s.wrong;
     s.seen++;
     s.wrong = !ok;
-    if (ok) { s.right++; if (!soft) s.box = Math.min(4, s.box + 1); addXp(soft ? 5 : 10); if (was) S.fixed = (S.fixed || 0) + 1; } else { s.box = 0; addXp(2); }
+    const today = dnum();
+    if (ok) {
+      s.right++;
+      if (!soft) { s.box = Math.min(4, s.box + 1); if (s.lastOk !== today) { s.lastOk = today; s.nd = (s.nd || 0) + 1; } s.due = today + INTERVALS[s.box]; }
+      addXp(soft ? 5 : 10); if (was) S.fixed = (S.fixed || 0) + 1;
+    } else { s.box = Math.max(0, s.box - 1); s.due = today; addXp(2); }
     save();
     if (LA.onRate) LA.onRate(d, c, ok, !!was);
   }
   const touch = d => { const id = base(d).id; S.recent = [id, ...(S.recent || []).filter(x => x !== id)].slice(0, 6); save(); };
+  // Fällig: schon gesehen und der Wiederholungstag ist erreicht (oder zuletzt falsch).
+  const isDue = s => !!s && s.seen > 0 && ((s.due || 0) <= dnum() || s.wrong);
   // Schwache Karten kommen häufiger dran.
   function pick(d, n) {
-    const pool = cardsOf(d).map(c => ({ c, w: 5 - st(d, c).box + (st(d, c).seen ? 0 : 1) }));
+    const pool = cardsOf(d).map(c => ({ c, w: 5 - st(d, c).box + (st(d, c).seen ? 0 : 1) + (isDue(st(d, c)) ? 2 : 0) }));
     const out = [];
     while (out.length < n && pool.length) {
       let r = Math.random() * pool.reduce((s, p) => s + p.w, 0), k = 0;
@@ -248,6 +271,7 @@
   // tab: 'learn' | 'plan' | 'practice' | 'notes' | 'profile' zeigt die Tab-Leiste, ohne tab ist sie versteckt (Lernen läuft).
   function go(fn, tab) {
     clearInterval(LA.timer);
+    LA.sessionExit = null;
     view.replaceChildren();
     document.body.dataset.tab = tab || '';
     fn();
@@ -255,7 +279,10 @@
     window.scrollTo(0, 0);
   }
 
-  Object.assign(LA, { sentence, filled, explainLines, restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  // Vorlesen mit der Sprachausgabe des Geräts (nur für Englisch und Spanisch).
+  const speakLang = d => { const b = base(d); if (b.speak) return b.speak; if (b.subject === 'spanisch') return 'es-ES'; if (b.subject === 'englisch' && /^(en-unit|en-family|en-relationship|irregular|en-sa-peer)/.test(b.id)) return 'en-GB'; return null; };
+  const speak = (text, lang) => { try { const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { /* kein Vorlesen möglich */ } };
+  Object.assign(LA, { dnum, sure, isDue, speak, speakLang, INTERVALS, sentence, filled, explainLines, restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();

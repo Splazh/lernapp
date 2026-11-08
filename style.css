@@ -1,6 +1,6 @@
 /* Lernapp: helles Lavendel, Violett als Hauptfarbe, weiße runde Karten. Dunkelmodus folgt dem Gerät. */
 :root {
-  --bg: #F3F4FF; --bg-out: #E5E7FA; --surface: #FFFFFF; --ink: #1B1A3B; --muted: #7C80A3; --line: #E4E6F7;
+  --bg: #F3F4FF; --bg-out: #E5E7FA; --surface: #FFFFFF; --ink: #1B1A3B; --muted: #5F6389; --line: #E4E6F7;
   --pri: #6D4CFF; --pri-2: #9378FF; --pri-soft: #ECE8FF; --good: #1FAE68; --bad: #EE5368;
   --shadow: 0 10px 28px rgba(64, 52, 150, .09); --shadow-up: 0 -10px 30px rgba(64, 52, 150, .12);
   --tint: color-mix(in srgb, var(--c, var(--pri)) 14%, var(--surface));
@@ -366,3 +366,16 @@ body:has(.editor) #tabs { display: none; }
 
 .deckwrap { display: grid; gap: 2px; }
 .deckwrap > .linkbtn { justify-self: start; padding: 6px 4px 2px; font-size: 13px; }
+
+/* Zugänglichkeit: Fokusrahmen für Tastatur, Schriftgröße, Bilder, Vorlesen, Konfetti */
+:focus-visible { outline: 3px solid var(--pri); outline-offset: 2px; }
+html[data-fs="large"] #app { zoom: 1.12; }
+html[data-fs="xl"] #app { zoom: 1.25; }
+.qimg { display: block; max-width: 100%; max-height: 200px; margin: 0 auto 12px; border-radius: 14px; object-fit: contain; }
+.speakbtn { flex: none; width: 44px; height: 44px; border: 0; border-radius: 14px; background: var(--pri-soft); font-size: 20px; margin: 0 8px; }
+.face .speakbtn { margin: 12px auto 0; display: block; }
+.nextrev { text-align: center; margin: 4px 0 8px; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
+.confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: conf 1.9s ease-in forwards; }
+@keyframes conf { to { transform: translateY(105vh) rotate(540deg); opacity: .9; } }
+.lives { text-align: center; font-size: 22px; letter-spacing: 4px; margin: 6px 0 0; }

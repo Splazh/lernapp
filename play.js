@@ -8,17 +8,21 @@
 
   // ---------- Gemeinsame Bausteine ----------
   const leave = d => () => go(() => LA.ui.deck(d));
+  // In einer gemischten Runde (study.js) führt das Kreuz zurück dorthin, wo die Runde gestartet wurde.
   const top = (d, i, n) => h('div', { class: 'qtop' },
-    h('button', { class: 'iconbtn', 'aria-label': 'Beenden', onclick: leave(d) }, svg('close')),
+    h('button', { class: 'iconbtn', 'aria-label': 'Beenden', onclick: () => (LA.sessionExit || leave(d))() }, svg('close')),
     h('div', { class: 'track' }, h('i', { style: 'width:' + (n ? Math.round(i / n * 100) : 0) + '%' })),
     n ? h('span', { class: 'count' }, (i + 1) + '/' + n) : '');
-  const qcard = (d, c) => h('div', { class: 'qcard' }, h('div', { class: 'q' }, prompt(d, c)),
-    labels(d).length ? h('div', { class: 'ql' }, labels(d).join(' – ')) : '');
+  let cur = null;   // Karte, die gerade gezeigt wird (fürs Vorlesen)
+  const qcard = (d, c) => { cur = { d, c }; return h('div', { class: 'qcard' }, c.img ? h('img', { class: 'qimg', src: c.img, alt: 'Bild zur Frage' }) : '', h('div', { class: 'q' }, prompt(d, c)),
+    labels(d).length ? h('div', { class: 'ql' }, labels(d).join(' – ')) : ''); };
+  // Vorlese-Knopf für Englisch und Spanisch (liest die Antwort in der Fremdsprache)
+  const speakBtn = (d, c) => { const lang = LA.speakLang(d); return lang ? h('button', { class: 'speakbtn', type: 'button', 'aria-label': 'Antwort vorlesen', onclick: e => { e.stopPropagation(); LA.speak(ans(d, c).map(a => splitVar(a)[0]).join('. '), lang); } }, '🔊') : ''; };
   // Untere Leiste: Rückmeldung nach einer Antwort mit "Weiter".
   function dock(ok, title, sub, next, label) {
     const old = view.querySelector('.dock'); if (old) old.remove();
-    view.append(h('div', { class: 'dock ' + (ok ? 'good' : 'bad') },
-      h('div', { class: 'fb' }, h('strong', null, title), sub ? h('span', null, sub) : ''),
+    view.append(h('div', { class: 'dock ' + (ok ? 'good' : 'bad'), role: 'status' },
+      h('div', { class: 'fb' }, h('strong', null, title), sub ? h('span', null, sub) : ''), cur ? speakBtn(cur.d, cur.c) : '',
       h('button', { class: 'cta', onclick: next }, label || 'Weiter')));
   }
   const plainDock = (...kids) => {
@@ -40,6 +44,7 @@
     if (!cardsOf(d).length) return LA.goBack(d);
     LA.opt(d).mode = key; touch(d); xp0 = S.xp;
     // go() räumt den alten Bildschirm weg, sonst hängt das Spiel unter dem Themen-Blatt.
+    if (LA.rounds && LA.rounds[key]) return LA.rounds[key](d);
     if (key === 'pairs') return go(() => pairs(d));
     if (key === 'timed') return go(() => timed(d));
     if (key === 'order') return LA.orderStart(d);
@@ -62,7 +67,7 @@
     card.addEventListener('click', () => {
       if (card.classList.contains('turned')) return;
       card.classList.add('turned');
-      plainDock(
+      plainDock(speakBtn(d, c),
         h('button', { class: 'cta ghost bad', onclick: () => { rate(d, c, false); done(false); } }, 'Nochmal'),
         h('button', { class: 'cta good', onclick: () => { rate(d, c, true); done(true); } }, 'Gewusst'));
     });
@@ -149,7 +154,7 @@
     let time = 60, score = 0, combo = 0, c = null, locked = false;
     const bar = h('i', { style: 'width:100%' }), clock = h('span', { class: 'timer' }), pts = h('span', { class: 'chip' }), comboEl = h('div', { class: 'combo' });
     const body = h('div');
-    const tick = () => { clock.textContent = time + ' s'; clock.classList.toggle('low', time <= 10); pts.textContent = score + ' Punkte'; bar.style.width = Math.round(time / 60 * 100) + '%'; };
+    const tick = () => { clock.textContent = time + ' s'; clock.classList.toggle('low', time <= 10); pts.textContent = score + ' Punkte' + (S.best[d.id] ? ' · Rekord ' + S.best[d.id] : ''); bar.style.width = Math.round(time / 60 * 100) + '%'; };
     function nextQ() {
       locked = false; c = pick(d, 1)[0];
       const opts = choices(d, c, ok => {
@@ -193,11 +198,14 @@
       sub = right + ' von ' + total + ' richtig';
     }
     const gained = S.xp - xp0;
+    if (pct === 100 && key !== 'timed' && LA.confetti) LA.confetti();
+    const tomorrow = key === 'timed' || key === 'pairs' ? 0 : cardsOf(base(d)).filter(c => { const s = LA.st(d, c); return s.seen > 0 && (s.due || 0) <= LA.dnum() + 1; }).length;
     const stat = (v, l) => h('div', { class: 'stat' }, h('strong', null, v), h('span', null, l));
     view.append(h('div', { class: 'result' },
       h('div', { class: 'ringwrap' }, LA.ring(pct, { size: 168, stroke: 14 }), h('div', { class: 'ringtxt' }, center)),
       h('h2', null, title), h('p', { class: 'lead' }, sub),
       h('div', { class: 'stats3' }, stat('+' + gained, 'XP'), stat(streakNow(), 'Tage Serie'), stat(mastered(d) + '/' + base(d).cards.length, 'sicher')),
+      tomorrow ? h('p', { class: 'lead nextrev' }, '🔁 Morgen wiederholen wir ' + tomorrow + (tomorrow === 1 ? ' Karte' : ' Karten') + ' aus diesem Thema.') : '',
       h('div', { class: 'stackbtn' },
         h('button', { class: 'cta', onclick: () => start(d, key) }, 'Nochmal'),
         h('button', { class: 'cta ghost', onclick: leave(d) }, 'Andere Lernart'),
@@ -205,5 +213,5 @@
   }
 
   LA.start = start;
-  LA.kit = { top, qcard, dock, plainDock, leave, finish, explainBox };
+  LA.kit = { top, qcard, dock, plainDock, leave, finish, explainBox, mc, type, flash, speakBtn };
 })();

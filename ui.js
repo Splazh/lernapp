@@ -18,7 +18,7 @@
   const avatar = cls => h('div', { class: 'avatar ' + (cls || ''), 'aria-hidden': 'true' }, nm()[0].toUpperCase());
   const answersTotal = () => {
     let seen = 0, right = 0, ok = 0;
-    for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (c.box >= 3) ok++; }
+    for (const o of Object.values(S.cards || {})) for (const c of Object.values(o)) { seen += c.seen; right += c.right; if (LA.sure(c)) ok++; }
     return { seen, right, ok };
   };
   const startDeck = d => go(() => ui.deck(d));
@@ -50,7 +50,7 @@
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
       h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      hero, ui.nextTest ? ui.nextTest() : '', ui.questCard ? ui.questCard() : '',
+      hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.questCard ? ui.questCard() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
       head('Deine Fächer', toggle), wrap);
