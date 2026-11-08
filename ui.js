@@ -65,7 +65,7 @@
     const rows = ds.flatMap((d, k) => {
       const gh = d.group && d.group !== (ds[k - 1] || {}).group ? h('h3', { class: 'grp' }, d.group) : null;
       return [gh, h('button', { class: 'deck', type: 'button', onclick: () => startDeck(d) },
-        tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, mastered(d) + ' von ' + d.cards.length + ' sicher gelernt'), bar(deckPct(d))), svg('chevron', 'chev'))];
+        tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, mastered(d) + ' von ' + d.cards.length + ' sicher gelernt' + (LA.hasRead && LA.hasRead(d) ? ' · 📚 mit Lesetext' : '')), bar(deckPct(d))), svg('chevron', 'chev'))];
     });
     view.append(
       h('div', { class: 'topline' }, backBtn(() => go(home, 'learn'))),
@@ -122,6 +122,7 @@
         h('div', { class: 'grow' }, h('h1', null, d.filter ? 'Falsche Antworten' : b.title),
           h('p', { class: 'lead' }, d.filter ? cardsOf(d).length + ' Karten zum Wiederholen' : pct + ' % sicher · ' + b.cards.length + ' Karten'))),
       h('section', { class: 'sheet' },
+        LA.readRow && !d.filter ? LA.readRow(d) : '',
         b.info && !d.filter ? h('button', { class: 'row-link', type: 'button', onclick: () => go(() => info(d)) }, tileIco('📖'),
           h('span', { class: 'grow' }, 'Erklärung lesen', h('small', null, 'So funktioniert dieses Thema')), svg('chevron', 'chev')) : '',
         d.labels.length > 1 ? h('label', { class: 'switch' }, h('span', { class: 'grow' }, 'Erste Form vorgeben', h('small', null, d.labels[0] + ' steht schon da, du ergänzt den Rest.')),

@@ -397,3 +397,14 @@ textarea { width: 100%; font: inherit; color: var(--ink); background: var(--surf
 .slot.full { border-style: solid; border-color: var(--pri); color: var(--ink); }
 .slot.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)); }
 .slot.no { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--surface)); }
+
+.readlead p { font-size: 18px; font-weight: 600; margin: 0; line-height: 1.5; }
+.readsec { margin-top: 14px; }
+.readsec h2 { font-size: 19px; margin: 0 0 8px; }
+.readsec p { font-size: 17px; line-height: 1.65; margin: 0 0 10px; }
+.kw { background: color-mix(in srgb, var(--pri) 14%, transparent); border-radius: 6px; padding: 0 4px; font-weight: 800; }
+.keys { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.chkq { border-top: 1px solid var(--line); padding: 10px 0; }
+.chkq summary { font-weight: 700; cursor: pointer; }
+.chkq p { margin: 8px 0 0; color: var(--ink); }
+.readrow.new { outline: 2px solid var(--pri); }

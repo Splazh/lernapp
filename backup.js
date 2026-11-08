@@ -4,7 +4,7 @@
   const LA = window.LA;
   const { h, S, save, tileIco } = LA;
   const ui = LA.ui;
-  const KEYS = ['xp', 'last', 'streak', 'cards', 'best', 'opts', 'recent', 'fixed', 'layout', 'theme', 'got', 'stats', 'day', 'week', 'maxStreak', 'name', 'tests', 'notes', 'seeded', 'lastBackup', 'freeze', 'mine', 'open', 'fs', 'srs'];
+  const KEYS = ['xp', 'last', 'streak', 'cards', 'best', 'opts', 'recent', 'fixed', 'layout', 'theme', 'got', 'stats', 'day', 'week', 'maxStreak', 'name', 'tests', 'notes', 'seeded', 'lastBackup', 'freeze', 'mine', 'open', 'fs', 'srs', 'srs2', 'read'];
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
   // Nur bekannte Felder mit passendem Typ übernehmen. Alles andere wird verworfen.
@@ -12,7 +12,7 @@
     if (!isObj(d) || typeof d.xp !== 'number' || !isFinite(d.xp) || d.xp < 0 || !isObj(d.cards)) return null;
     const out = {};
     for (const k of KEYS) if (k in d) out[k] = d[k];
-    for (const k of ['cards', 'best', 'opts', 'got', 'stats', 'mine', 'open']) if (k in out && !isObj(out[k])) delete out[k];
+    for (const k of ['cards', 'best', 'opts', 'got', 'stats', 'mine', 'open', 'read']) if (k in out && !isObj(out[k])) delete out[k];
     for (const k of ['recent', 'tests', 'notes']) if (k in out && !Array.isArray(out[k])) delete out[k];
     for (const k of ['name', 'theme', 'layout', 'last']) if (k in out && typeof out[k] !== 'string') delete out[k];
     if (out.name) out.name = out.name.slice(0, 24);
