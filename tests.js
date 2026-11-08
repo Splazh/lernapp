@@ -10,6 +10,7 @@
   const SA_DECKS = ['en-sa-aufbau', 'en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 'en-sa-peer', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 't-used-to', 'irregular-verbs', 'en-sa-gapfill', 'en-sa-mc', 'en-sa-oddone', 'en-sa-pastgap', 'en-sa-bullying-mc', 'en-word-formation', 'en-srdp-formate'];
   // Geografie Test (GWB 1): Einheiten 1 bis 16, handschriftlich 20 bis 30 Minuten, Begriffe, Aussagen, Zusammenhänge.
   const GEO_STOFF = 'Einheiten 1 bis 16: Gliederungen, Geologie, Vulkanismus, Atmosphäre, Temperatur, Wind, Zirkulation, Klimawandel, Extremwetter, Desertifikation, Biogeographie, Karst, Geomorphologie, Sundarbans. 20 bis 30 BE.';
+  const GEO_LATER = ['geo-exogen-karst']; // Einheit 14/15: am Testtag vermutlich noch nicht (ganz) dran, bleibt aber im Stoff
   const GEO_DECKS = ['geo-testaufgaben', 'geo-karten', 'geo-geologie', 'geo-vulkane', 'geo-atmosphaere', 'geo-klima', 'geo-wind', 'geo-zirkulation', 'geo-klimawandel', 'geo-biogeo', 'geo-regenwald', 'geo-exogen-karst'];
   // Beim ersten Start: die drei bekannten Termine, damit Lana nicht bei null anfängt.
   if (!S.seeded) {
@@ -20,7 +21,7 @@
         { id: newId(), subj: 'englisch', seed: true, title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
           decks: ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },
         { id: newId(), subj: 'englisch', title: 'Englisch Test', date: '2026-11-11', stoff: SA_STOFF, decks: SA_DECKS.slice() },
-        { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-13', stoff: GEO_STOFF, decks: GEO_DECKS.slice() }
+        { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-13', stoff: GEO_STOFF, decks: GEO_DECKS.slice(), skip: GEO_LATER.slice(), skipInit: true }
       ];
     }
     save();
@@ -31,7 +32,7 @@
   // Neue Schularbeit-Themen auch in den schon befüllten Test aufnehmen.
   (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && (t.decks || []).includes('en-sa-aufbau')).forEach(t => { SA_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
   // Schon gespeicherter Geografie-Test: leer befüllen, sonst fehlende Themen ergänzen.
-  (S.tests || []).filter(t => t.subj === 'geografie' && /Test/.test(t.title || '')).forEach(t => { t.decks = t.decks || []; if (t.date === '2026-11-27') t.date = '2026-11-13'; if (!t.stoff) t.stoff = GEO_STOFF; GEO_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
+  (S.tests || []).filter(t => t.subj === 'geografie' && /Test/.test(t.title || '')).forEach(t => { t.decks = t.decks || []; if (t.date === '2026-11-27') t.date = '2026-11-13'; if (!t.skipInit) { t.skip = GEO_LATER.slice(); t.skipInit = true; } if (!t.stoff) t.stoff = GEO_STOFF; GEO_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
   // Neue Wortschatz-Themen auch in den schon gespeicherten Check-Up aufnehmen.
   (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
 
@@ -45,7 +46,10 @@
   const niceDate = t => { const d = parse(t.date); return WEEKDAYS[d.getDay()] + ', ' + d.getDate() + '. ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); };
 
   // ---------- Bereitschaft ----------
-  const decksOfTest = t => (t.decks || []).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
+  const skipped = (t, id) => (t.skip || []).includes(id);
+  // Themen, die zum Fach gehören, aber vielleicht noch nicht im Test dran sind, zählen nicht für die Bereitschaft.
+  const decksOfTest = t => (t.decks || []).filter(id => !skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
+  const laterOfTest = t => (t.decks || []).filter(id => skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
   const readiness = t => {
     const ds = decksOfTest(t), total = ds.reduce((n, d) => n + d.cards.length, 0), ok = ds.reduce((n, d) => n + mastered(d), 0);
     return { total, ok, pct: total ? Math.round(ok / total * 100) : 0, has: ds.length > 0 };
@@ -90,8 +94,12 @@
     const byWeak = ds.slice().sort((a, b) => LA.deckPct(a) - LA.deckPct(b));
     const weakest = byWeak.find(d => LA.deckPct(d) < 100) || byWeak[0];
     const left = r.total - r.ok, perDay = n > 0 ? Math.ceil(left / n) : left;
-    const deckRow = d => h('button', { class: 'deck', type: 'button', style: '--c:' + subjectOf(d).color, onclick: () => go(() => ui.deck(via(d))) },
-      tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, mastered(d) + ' von ' + d.cards.length + ' sicher'), bar(LA.deckPct(d))), svg('chevron', 'chev'));
+    const later = laterOfTest(t);
+    const toggle = id => { t.skip = t.skip || []; const i = t.skip.indexOf(id); if (i < 0) t.skip.push(id); else t.skip.splice(i, 1); save(); go(() => test(t), 'plan'); };
+    const deckRow = (d, off) => h('div', { class: 'deckwrap' },
+      h('button', { class: 'deck', type: 'button', style: '--c:' + subjectOf(d).color, onclick: () => go(() => ui.deck(via(d))) },
+        tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, mastered(d) + ' von ' + d.cards.length + ' sicher'), bar(LA.deckPct(d))), svg('chevron', 'chev')),
+      h('button', { class: 'linkbtn', type: 'button', onclick: () => toggle(d.id) }, off ? 'Wieder für den Test aufnehmen' : 'Fürs Erste weglassen (kommt vielleicht später dran)'));
     let sure = false;
     const del = h('button', { class: 'linkbtn', type: 'button', onclick: () => {
       if (!sure) { sure = true; del.textContent = 'Wirklich löschen? Nochmal tippen'; del.classList.add('danger'); return; }
@@ -106,7 +114,10 @@
         h('div', { class: 'big' }, n >= 0 ? (n === 0 ? 'Heute' : n) : '–'), h('div', { class: 'grow' }, h('strong', null, n >= 0 ? (n === 0 ? 'Test ist heute. Viel Erfolg!' : n === 1 ? 'Tag bis zum Test' : 'Tage bis zum Test') : 'Dieser Test war ' + when(t).toLowerCase()),
           h('small', null, r.has ? (left > 0 && n > 0 ? 'Noch ' + left + ' Karten sicher lernen, das sind etwa ' + perDay + ' pro Tag.' : left > 0 ? 'Noch ' + left + ' Karten nicht sicher.' : 'Alles sicher gelernt. Stark!') : 'Verknüpfe unten Themen aus der App.'))),
       t.stoff ? h('section', { class: 'card info' }, h('h3', null, 'Stoff'), h('p', { class: 'stoff' }, t.stoff)) : '',
-      ds.length ? head('Themen für den Test') : '', ds.length ? h('div', { class: 'list' }, byWeak.map(deckRow)) : '',
+      ds.length ? head('Themen für den Test') : '', ds.length ? h('div', { class: 'list' }, byWeak.map(d => deckRow(d, false))) : '',
+      later.length ? head('Gehört zum Stoff, aber vermutlich später dran') : '',
+      later.length ? h('p', { class: 'lead', style: 'margin:-6px 0 12px' }, 'Diese Themen bleiben in der App und zählen nicht für den Test. Du kannst sie jederzeit wieder aufnehmen.') : '',
+      later.length ? h('div', { class: 'list dim' }, later.map(d => deckRow(d, true))) : '',
       h('button', { class: 'linkbtn', type: 'button', onclick: () => go(() => form(t), 'plan') }, ds.length ? 'Stoff und Themen ändern' : 'Stoff und Themen eintragen'),
       del,
       ds.length ? h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => go(() => ui.deck(via(weakest))) },
@@ -148,6 +159,7 @@
         f.title = f.title.trim();
         if (!f.title) { err.textContent = 'Gib dem Test einen Namen.'; title.focus(); return; }
         if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date)) { err.textContent = 'Wähle ein Datum.'; return; }
+        f.skip = (f.skip || []).filter(id => f.decks.includes(id));
         if (old) Object.assign(old, f); else tests().push(f);
         save(); go(() => test(old || f), 'plan');
       } }, 'Speichern')));

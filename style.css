@@ -363,3 +363,6 @@ body:has(.editor) #tabs { display: none; }
 @keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media (max-width: 360px) { .as-grid { grid-template-columns: 1fr; } h1 { font-size: 25px; } }
+
+.deckwrap { display: grid; gap: 2px; }
+.deckwrap > .linkbtn { justify-self: start; padding: 6px 4px 2px; font-size: 13px; }
