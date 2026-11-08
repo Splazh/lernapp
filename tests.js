@@ -99,7 +99,7 @@
     const deckRow = (d, off) => h('div', { class: 'deckwrap' },
       h('button', { class: 'deck', type: 'button', style: '--c:' + subjectOf(d).color, onclick: () => go(() => ui.deck(via(d))) },
         tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, mastered(d) + ' von ' + d.cards.length + ' sicher'), bar(LA.deckPct(d))), svg('chevron', 'chev')),
-      h('button', { class: 'linkbtn', type: 'button', onclick: () => toggle(d.id) }, off ? 'Wieder für den Test aufnehmen' : 'Fürs Erste weglassen (kommt vielleicht später dran)'));
+      h('button', { class: 'linkbtn', type: 'button', onclick: () => toggle(d.id) }, off ? 'Als wichtig für den Test markieren' : 'Als weniger wichtig für den Test markieren'));
     let sure = false;
     const del = h('button', { class: 'linkbtn', type: 'button', onclick: () => {
       if (!sure) { sure = true; del.textContent = 'Wirklich löschen? Nochmal tippen'; del.classList.add('danger'); return; }
@@ -115,9 +115,9 @@
           h('small', null, r.has ? (left > 0 && n > 0 ? 'Noch ' + left + ' Karten sicher lernen, das sind etwa ' + perDay + ' pro Tag.' : left > 0 ? 'Noch ' + left + ' Karten nicht sicher.' : 'Alles sicher gelernt. Stark!') : 'Verknüpfe unten Themen aus der App.'))),
       t.stoff ? h('section', { class: 'card info' }, h('h3', null, 'Stoff'), h('p', { class: 'stoff' }, t.stoff)) : '',
       ds.length ? head('Themen für den Test') : '', ds.length ? h('div', { class: 'list' }, byWeak.map(d => deckRow(d, false))) : '',
-      later.length ? head('Gehört zum Stoff, aber vermutlich später dran') : '',
-      later.length ? h('p', { class: 'lead', style: 'margin:-6px 0 12px' }, 'Diese Themen bleiben in der App und zählen nicht für den Test. Du kannst sie jederzeit wieder aufnehmen.') : '',
-      later.length ? h('div', { class: 'list dim' }, later.map(d => deckRow(d, true))) : '',
+      later.length ? head('Auch Stoff, aber für den Test weniger wichtig') : '',
+      later.length ? h('p', { class: 'lead', style: 'margin:-6px 0 12px' }, 'Das musst du auch lernen, es kommt aber vermutlich später oder nur am Rand dran. Lerne zuerst die Themen oben, die zählen für die Bereitschaft.') : '',
+      later.length ? h('div', { class: 'list' }, later.map(d => deckRow(d, true))) : '',
       h('button', { class: 'linkbtn', type: 'button', onclick: () => go(() => form(t), 'plan') }, ds.length ? 'Stoff und Themen ändern' : 'Stoff und Themen eintragen'),
       del,
       ds.length ? h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => go(() => ui.deck(via(weakest))) },
