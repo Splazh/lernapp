@@ -19,7 +19,8 @@
   const itemsOf = decks => decks.flatMap(d => cardsOf(base(d)).map(c => ({ d: base(d), c })));
   const dueItems = decks => itemsOf(decks).filter(it => LA.isDue(peek(it)));
   // Wichtigkeit: fällig, schwach (niedrige Box) und noch nie gesehen kommen zuerst, mit etwas Zufall.
-  const score = it => { const s = peek(it) || { box: 0, seen: 0 }; return (LA.isDue(s) ? 3 : 0) + (4 - s.box) + (s.seen ? 0 : 1) + Math.random() * 1.5; };
+  let focus = [];   // Themen des nächsten Tests: ihre Karten kommen bei "Heute fällig" zuerst
+  const score = it => { const s = peek(it) || { box: 0, seen: 0 }; return (LA.isDue(s) ? 3 : 0) + (4 - s.box) + (s.seen ? 0 : 1) + (focus.includes(it.d.id) ? 2.5 : 0) + Math.random() * 1.5; };
   const best = (items, n) => shuffle(items.map(it => ({ it, k: score(it) })).sort((a, b) => b.k - a.k).slice(0, n).map(x => x.it));
   const weakest = (items, n) => shuffle(items).map(it => ({ it, b: (peek(it) || { box: 0 }).box })).sort((a, b) => a.b - b.b).slice(0, n).map(x => x.it);
   const tomorrow = items => items.filter(it => { const s = peek(it); return s && s.seen > 0 && (s.due || 0) <= LA.dnum() + 1; }).length;
@@ -124,7 +125,9 @@
     run({ items: weakest(all, 10), lives: 3, back: back(t), tab: 'plan', again: () => boss(t) });
   }
   function dueSession() {
-    const items = best(dueItems(DECKS), 15); if (!items.length) return;
+    const t = LA.nextTestObj && LA.nextTestObj();
+    focus = t ? LA.testDecks(t).map(d => d.id) : [];
+    const items = best(dueItems(DECKS), 15); focus = []; if (!items.length) return;
     run({ items, typing: true, back: () => ui.home(), tab: 'learn', again: dueSession });
   }
 
@@ -153,9 +156,10 @@
   // ---------- Startseite: Heute fällig ----------
   ui.dueCard = () => {
     const n = dueItems(DECKS).length; if (!n) return '';
+    const today = Math.min(15, n), rest = n - today;
     return h('button', { class: 'nexttest', type: 'button', style: '--c:var(--pri)', onclick: dueSession },
-      h('span', { class: 'dateblock' }, h('b', null, n > 99 ? '99+' : n), h('small', null, 'fällig')),
-      h('span', { class: 'grow' }, h('strong', null, 'Heute fällig'), h('small', null, n + (n === 1 ? ' Karte wartet' : ' Karten warten') + ' auf Wiederholung')), svg('chevron', 'chev'));
+      h('span', { class: 'dateblock' }, h('b', null, today), h('small', null, 'heute')),
+      h('span', { class: 'grow' }, h('strong', null, 'Heute wiederholen'), h('small', null, today + (today === 1 ? ' Karte' : ' Karten') + ' für heute' + (rest ? ', danach noch ' + rest + ' im Plan' : ''))), svg('chevron', 'chev'));
   };
 
   LA.study = { dueSession, trainTest, probeTest, boss, testCard, ics, dueItems, grade, SCALES };

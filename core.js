@@ -2,7 +2,7 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 30 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 31 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
@@ -21,6 +21,13 @@
   // "Sicher" heißt: Box 3 oder höher UND an mindestens 2 verschiedenen Tagen richtig beantwortet.
   const sure = s => !!s && s.box >= 3 && (s.nd || 0) >= 2;
   // Einmalig: Karten, die vorher schon als sicher galten, bleiben sicher.
+  // Einmalig: Karten, die schon vor dem Lernplan geübt wurden, haben noch kein Datum. Sie werden über die nächsten Tage verteilt (höhere Box = später),
+  // damit nicht alle auf einmal "fällig" sind.
+  if (!S.srs2) {
+    const spread = [[0, 1], [0, 2], [1, 4], [2, 7], [4, 12]]; let n = 0;
+    for (const o of Object.values(S.cards || {})) for (const s of Object.values(o)) if (s && s.seen > 0 && s.due == null) { const [a, b] = spread[Math.min(4, s.box || 0)]; s.due = dnum() + a + (n++ * 7) % (b - a + 1); }
+    S.srs2 = 1;
+  }
   if (!S.srs) { for (const o of Object.values(S.cards || {})) for (const s of Object.values(o)) if (s && s.box >= 3 && s.nd == null) s.nd = 2; S.srs = 1; }
   const save = () => { try { localStorage.setItem('lernapp', JSON.stringify(S)); } catch (e) { /* ignorieren */ } };
   // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
@@ -170,8 +177,8 @@
     if (LA.onRate) LA.onRate(d, c, ok, !!was);
   }
   const touch = d => { const id = base(d).id; S.recent = [id, ...(S.recent || []).filter(x => x !== id)].slice(0, 6); save(); };
-  // Fällig: schon gesehen und der Wiederholungstag ist erreicht (oder zuletzt falsch).
-  const isDue = s => !!s && s.seen > 0 && ((s.due || 0) <= dnum() || s.wrong);
+  // Fällig: schon gesehen und der Wiederholungstag ist erreicht (eine falsche Antwort setzt ihn auf heute).
+  const isDue = s => !!s && s.seen > 0 && (s.due || 0) <= dnum();
   // Schwache Karten kommen häufiger dran.
   function pick(d, n) {
     const pool = cardsOf(d).map(c => ({ c, w: 5 - st(d, c).box + (st(d, c).seen ? 0 : 1) + (isDue(st(d, c)) ? 2 : 0) }));

@@ -51,6 +51,7 @@
   const decksOfTest = t => (t.decks || []).filter(id => !skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
   const laterOfTest = t => (t.decks || []).filter(id => skipped(t, id)).map(id => DECKS.find(d => d.id === id)).filter(Boolean);
   LA.testDecks = decksOfTest;
+  LA.nextTestObj = () => upcoming()[0];
   const readiness = t => {
     const ds = decksOfTest(t), total = ds.reduce((n, d) => n + d.cards.length, 0), ok = ds.reduce((n, d) => n + mastered(d), 0);
     return { total, ok, pct: total ? Math.round(ok / total * 100) : 0, has: ds.length > 0 };
