@@ -1,6 +1,6 @@
 // Geographie und wirtschaftliche Bildung 1 (WS 2026/27), Einheiten 1 bis 12 (Geoökosysteme).
 // Grundlage: Folien und Arbeitsaufträge auf Eduvidual und der Leitfaden. Karten und Sätze sind selbst geschrieben.
-// Der 1. Test ist laut Leitfaden am 27.11. (handschriftlich, ca. 20-30 Minuten).
+// Der 1. Test ist am 13.11. (laut Nutzer; im Leitfaden steht 27.11.), handschriftlich, ca. 20-30 Minuten.
 (function () {
   const G = 'Geoökosysteme (Einheiten 1 bis 12)';
   const add = (id, title, icon, info, cards) => (window.DECKS = window.DECKS || []).push(

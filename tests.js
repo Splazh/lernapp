@@ -20,7 +20,7 @@
         { id: newId(), subj: 'englisch', seed: true, title: '1st Check-Up', date: '2026-11-04', stoff: 'Wortschatz Unit 1 und 2 (English in Context 5), Present und Past Simple/Continuous, unregelmäßige Verben.',
           decks: ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test', 'en-family-vocab', 'en-relationship-verbs', 't-present-simple', 't-present-progressive', 't-past-simple', 't-past-progressive', 't-present-vergleich', 't-past-vergleich', 't-stative-verbs', 'irregular-verbs'] },
         { id: newId(), subj: 'englisch', title: 'Englisch Test', date: '2026-11-11', stoff: SA_STOFF, decks: SA_DECKS.slice() },
-        { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-27', stoff: GEO_STOFF, decks: GEO_DECKS.slice() }
+        { id: newId(), subj: 'geografie', title: 'Geografie Test', date: '2026-11-13', stoff: GEO_STOFF, decks: GEO_DECKS.slice() }
       ];
     }
     save();
@@ -31,7 +31,7 @@
   // Neue Schularbeit-Themen auch in den schon befüllten Test aufnehmen.
   (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && (t.decks || []).includes('en-sa-aufbau')).forEach(t => { SA_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
   // Schon gespeicherter Geografie-Test: leer befüllen, sonst fehlende Themen ergänzen.
-  (S.tests || []).filter(t => t.subj === 'geografie' && /Test/.test(t.title || '')).forEach(t => { t.decks = t.decks || []; if (!t.stoff) t.stoff = GEO_STOFF; GEO_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
+  (S.tests || []).filter(t => t.subj === 'geografie' && /Test/.test(t.title || '')).forEach(t => { t.decks = t.decks || []; if (t.date === '2026-11-27') t.date = '2026-11-13'; if (!t.stoff) t.stoff = GEO_STOFF; GEO_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
   // Neue Wortschatz-Themen auch in den schon gespeicherten Check-Up aufnehmen.
   (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
 
