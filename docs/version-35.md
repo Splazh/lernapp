@@ -3,7 +3,7 @@ auto_generated: false
 ---
 # Version 35 — Verfeinerung auf Grundlage von Version 33
 
-Lokaler Vorschlag, keine Veröffentlichung oder visuelle Nutzerfreigabe.
+Vom Nutzer am 2026-11-09 freigegeben und veröffentlicht (origin/main 7191eb7). Offen: echte Handyprüfung.
 
 ## Gestaltung
 
