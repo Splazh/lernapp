@@ -1,0 +1,13 @@
+{
+  "name": "lernapp",
+  "private": true,
+  "version": "33.0.0",
+  "description": "Offline learning app; dependency-free Node tests",
+  "scripts": {
+    "test": "node --test qa/*.test.cjs",
+    "check": "node qa/check.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

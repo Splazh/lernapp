@@ -58,7 +58,7 @@
       });
       if (blank) { blank.textContent = splitVar(sol[0])[0]; blank.classList.add(allOk ? 'ok' : 'no'); }
       if (!allOk) { buzz(60); const x = K.explainBox(d, c); if (x) view.append(x); }
-      rate(d, c, allOk);
+      rate(d, c, allOk, false, 'recall');
       K.dock(allOk, allOk ? 'Richtig!' : 'Fast', allOk ? '+10 XP' : 'Die Lösung steht unter dem Feld.', () => done(allOk));
     }
     inputs.forEach((inp, k) => inp.addEventListener('keydown', e => {

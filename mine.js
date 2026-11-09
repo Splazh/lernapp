@@ -1,99 +1,116 @@
-// Lernapp, Teil 10: Eigene Karten. Selbst schreiben, aus einer Liste einfügen (zum Beispiel Quizlet-Export) und mit Foto versehen.
-// Die Karten liegen in S.mine[Fach] und erscheinen als Thema "Meine Karten" im jeweiligen Fach.
+// auto_generated: false
+// Own topics with stable card identities, editing, ordering and portable export.
 (() => {
   'use strict';
-  const LA = window.LA;
-  const { h, svg, S, save, go, tileIco, head, backBtn, view, DECKS, SUBJECTS } = LA;
-  const ui = LA.ui;
-  S.mine = S.mine && typeof S.mine === 'object' ? S.mine : {};
-  const cards = subj => (S.mine[subj] = S.mine[subj] || []);
-  const deckId = subj => 'mine-' + subj;
-
-  // Das Stoffpaket zu einem Fach anlegen oder nachführen (es zeigt direkt auf die gespeicherte Liste).
-  function ensure(subj) {
-    const list = cards(subj); let d = DECKS.find(x => x.id === deckId(subj));
-    if (!list.length) { if (d) DECKS.splice(DECKS.indexOf(d), 1); return; }
-    if (!d) { d = { id: deckId(subj), subject: subj, group: 'Meine Karten', title: 'Meine Karten', icon: '✍️', labels: ['Antwort'], noModes: ['pairs'], mine: true, cards: list }; DECKS.push(d); }
-    d.cards = list;
+  const L = window.LA, { h, S, go, view, ui, SUBJECTS, DECKS, backBtn } = L;
+  S.topics = S.topics || [];
+  if (!S.topicsMigrated) {
+    for (const [subject, cards] of Object.entries(S.mine || {})) if (cards.length) {
+      const id = 'mine-' + subject;
+      if (!S.topics.some(t => t.id === id)) S.topics.push({ id, subject, title: 'Meine Karten', cards });
+    }
+    S.topicsMigrated = true; S.mine = {}; L.save();
   }
-  Object.keys(S.mine).forEach(ensure);
-
-  // Foto verkleinern, damit der Speicher nicht voll läuft
-  const shrink = (file, max) => new Promise((ok, fail) => {
-    const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => {
-      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
-      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', .7));
+  const sync = () => {
+    for (let i = DECKS.length - 1; i >= 0; i--) if (DECKS[i].mine) DECKS.splice(i, 1);
+    window.READ = window.READ || {};
+    for (const t of S.topics) {
+      t.cards.forEach((r, i) => {
+        const oldKey = L.cardKey(r), meta = typeof r[r.length - 1] === 'object' ? r[r.length - 1] : null;
+        if (!meta?.id) {
+          const next = { ...(meta || {}), id: L.newId() }; if (meta) r[r.length - 1] = next; else r.push(next);
+          const records = S.cards[t.id];
+          if (records) { const record = records[String(i)] || records[oldKey]; if (record) records[next.id] = record; delete records[String(i)]; delete records[oldKey]; }
+        }
+      });
+      const d = { ...t, mine: true, group: 'Eigene Themen', icon: '✍️', labels: ['Antwort'], noModes: ['pairs'] };
+      DECKS.push(d); L.migrateCards(d);
+      if (t.reading) window.READ[t.id] = t.reading; else delete window.READ[t.id];
+    }
+  };
+  sync(); L.save();
+  const button = (text, fn, cls = 'cta ghost') => h('button', { type: 'button', class: cls, onclick: fn }, text);
+  const field = (label, input) => h('label', { class: 'field' }, h('span', null, label), input);
+  const parse = text => text.split(/\r?\n/).map(l => l.split(/\t|;|\s=\s|\|/).map(s => s.trim())).filter(r => r.length >= 2 && r[0] && r[1]).map(r => [r[0], r.slice(1).join(' '), { id: L.newId() }]);
+  const shrink = file => new Promise((resolve, reject) => {
+    const image = new Image(), url = URL.createObjectURL(file);
+    image.onload = () => {
+      const k = Math.min(1, 520 / Math.max(image.width, image.height)), canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * k); canvas.height = Math.round(image.height * k);
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url); resolve(canvas.toDataURL('image/jpeg', .65));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); fail(new Error('Bild')); }; img.src = url;
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Das Bild konnte nicht gelesen werden.')); }; image.src = url;
   });
-
-  // Liste einlesen: pro Zeile Frage und Antwort, getrennt durch Tab, Strichpunkt, = oder |
-  const parse = text => text.split(/\r?\n/).map(l => {
-    const m = l.split(/\t|;|\s=\s|\|/).map(x => x.trim()); return m.length >= 2 && m[0] && m[1] ? [m[0], m.slice(1).join(' ')] : null;
-  }).filter(Boolean);
-
-  function remove(subj, i) {
-    cards(subj).splice(i, 1);
-    const old = S.cards[deckId(subj)] || {}, next = {};
-    for (const k of Object.keys(old)) { const n = +k; if (n < i) next[n] = old[k]; else if (n > i) next[n - 1] = old[k]; }
-    S.cards[deckId(subj)] = next; ensure(subj); save();
+  function exportTopic(t) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ app: 'lernapp-topic', version: 1, topic: t }, null, 2)], { type: 'application/json' }));
+    const a = h('a', { href: url, download: 'lernthema.json' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
-
-  function editor(subj) {
-    const sub = SUBJECTS.find(s => s.id === subj), msg = h('p', { class: 'bk-msg', role: 'status' }), listEl = h('div', { class: 'list' });
-    const q = h('input', { type: 'text', autocomplete: 'off', maxlength: 200, 'aria-label': 'Frage' }), a = h('input', { type: 'text', autocomplete: 'off', maxlength: 200, 'aria-label': 'Antwort' });
-    const pic = h('input', { type: 'file', accept: 'image/*', hidden: true }), picBtn = h('button', { class: 'cta ghost', type: 'button', onclick: () => pic.click() }, '📷 Foto dazu (optional)');
-    let img = null;
-    pic.addEventListener('change', async () => {
-      const f = pic.files[0]; pic.value = ''; if (!f) return;
-      try { img = await shrink(f, 520); if (img.length > 140000) img = await shrink(f, 320); picBtn.textContent = '📷 Foto ausgewählt (tippen zum Ersetzen)'; } catch (e) { msg.textContent = 'Das Bild konnte nicht gelesen werden.'; }
-    });
-    const draw = () => {
-      const l = cards(subj);
-      listEl.replaceChildren(...l.map((c, i) => {
-        let sure = false;
-        const del = h('button', { class: 'linkbtn', type: 'button', onclick: () => { if (!sure) { sure = true; del.textContent = 'Wirklich? Nochmal tippen'; del.classList.add('danger'); return; } remove(subj, i); draw(); } }, 'Löschen');
-        return h('div', { class: 'card witem mineitem' }, h('div', { class: 'grow' }, h('strong', null, (c[2] && c[2].img ? '🖼️ ' : '') + c[0]), h('span', null, c[1])), del);
+  function editor(t) {
+    let editing = -1, image = null;
+    const q = h('textarea', { rows: 2, maxlength: 2000 }), a = h('textarea', { rows: 2, maxlength: 2000 });
+    const title = h('input', { type: 'text', value: t.title, maxlength: 80 });
+    const lead = h('textarea', { rows: 2 }), text = h('textarea', { rows: 8 });
+    lead.value = t.reading?.lead || ''; text.value = (t.reading?.sections || []).map(s => s.h + '\n' + s.p.join('\n')).join('\n\n');
+    const list = h('div'), msg = h('p', { role: 'status' }), photo = h('input', { type: 'file', accept: 'image/*', hidden: true });
+    const imgStatus = h('small');
+    const persist = success => { sync(); msg.textContent = L.save() ? success : 'Nur in dieser Sitzung gespeichert. Bitte sichere deinen Stand als Datei.'; };
+    const clear = () => { editing = -1; q.value = a.value = ''; image = null; imgStatus.textContent = ''; add.textContent = 'Karte hinzufügen'; };
+    const add = button('Karte hinzufügen', () => {
+      if (!q.value.trim() || !a.value.trim()) { msg.textContent = 'Bitte Frage und Antwort ausfüllen.'; return; }
+      const old = t.cards[editing], oldKey = old && L.cardKey(old);
+      const meta = old && typeof old[old.length - 1] === 'object' ? old[old.length - 1] : {};
+      const row = [q.value.trim(), a.value.trim(), { ...meta, id: meta.id || L.newId() }];
+      if (image) row[2].img = image; else delete row[2].img;
+      if (editing >= 0) { t.cards[editing] = row; if (S.cards[t.id]) delete S.cards[t.id][oldKey]; }
+      else t.cards.push(row);
+      clear(); persist('Karte gespeichert. Bei geänderten Karten beginnt der Lernstand neu.'); draw();
+    }, 'cta');
+    photo.onchange = async () => { const f = photo.files[0]; photo.value = ''; if (!f) return; try { image = await shrink(f); imgStatus.textContent = 'Foto ausgewählt'; } catch (e) { msg.textContent = e.message; } };
+    function draw() {
+      list.replaceChildren(...t.cards.map((r, i) => {
+        const target = h('select', { 'aria-label': 'Zielthema für Karte' }, ...S.topics.filter(x => x.id !== t.id).map(x => h('option', { value: x.id }, x.title)));
+        let confirm = false;
+        const del = button('Löschen', () => { if (!confirm) { confirm = true; del.textContent = 'Löschen bestätigen'; return; } const key = L.cardKey(r); t.cards.splice(i, 1); if (S.cards[t.id]) delete S.cards[t.id][key]; clear(); persist('Karte gelöscht.'); draw(); }, 'linkbtn');
+        const move = delta => { [t.cards[i], t.cards[i + delta]] = [t.cards[i + delta], t.cards[i]]; clear(); persist('Reihenfolge gespeichert.'); draw(); };
+        return h('section', { class: 'card' }, h('strong', null, r[0]), h('p', null, r[1]), h('div', { class: 'editor-actions' },
+          button('Bearbeiten', () => { editing = i; q.value = r[0]; a.value = r[1]; image = r[2]?.img || null; imgStatus.textContent = image ? 'Foto vorhanden' : ''; add.textContent = 'Änderungen speichern'; q.focus(); }),
+          i ? button('↑ Nach oben', () => move(-1)) : '', i < t.cards.length - 1 ? button('↓ Nach unten', () => move(1)) : '', del),
+          S.topics.length > 1 ? h('div', { class: 'editor-actions' }, target, button('Verschieben', () => {
+            const to = S.topics.find(x => x.id === target.value); if (!to) return;
+            const key = L.cardKey(r), record = (S.cards[t.id] || {})[key];
+            to.cards.push(r); t.cards.splice(i, 1);
+            if (record) { S.cards[to.id] = S.cards[to.id] || {}; S.cards[to.id][key] = record; delete S.cards[t.id][key]; }
+            clear(); persist('Karte verschoben; Lernstand erhalten.'); draw();
+          })) : '');
       }));
-      if (!l.length) listEl.append(h('p', { class: 'empty' }, 'Noch keine eigenen Karten in ' + sub.title + '.'));
-    };
-    const add = () => {
-      const qq = q.value.trim(), aa = a.value.trim();
-      if (!qq || !aa) { msg.textContent = 'Schreibe Frage und Antwort.'; return; }
-      const used = cards(subj).filter(c => c[2] && c[2].img).length;
-      if (img && used >= 30) { msg.textContent = 'Mehr als 30 Karten mit Foto passen nicht in den Speicher.'; return; }
-      cards(subj).push(img ? [qq, aa, { img }] : [qq, aa]); ensure(subj); save();
-      q.value = a.value = ''; img = null; picBtn.textContent = '📷 Foto dazu (optional)'; msg.textContent = 'Karte gespeichert.'; draw(); q.focus();
-    };
-    [q, a].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }));
-    const bulk = h('textarea', { rows: 5, placeholder: 'Pro Zeile eine Karte: Frage, dann Tab oder Strichpunkt, dann Antwort', 'aria-label': 'Liste einfügen' });
-    const imp = () => {
-      const rows = parse(bulk.value); if (!rows.length) { msg.textContent = 'Keine Karten gefunden. Pro Zeile: Frage ; Antwort'; return; }
-      rows.forEach(r => cards(subj).push(r)); ensure(subj); save(); bulk.value = ''; msg.textContent = rows.length + ' Karten eingefügt.'; draw();
-    };
-    view.append(h('div', { class: 'topline' }, backBtn(() => go(() => overview(), 'learn'))),
-      h('header', { class: 'shd', style: '--c:' + sub.color }, tileIco(sub.icon, 'lg'), h('div', { class: 'grow' }, h('h1', null, 'Meine Karten'), h('p', { class: 'lead' }, sub.title))),
-      h('section', { class: 'card' }, h('h3', null, 'Neue Karte'),
-        h('div', { class: 'fields' }, h('label', { class: 'field' }, h('span', null, 'Frage oder Begriff'), q), h('label', { class: 'field' }, h('span', null, 'Antwort'), a)),
-        pic, h('div', { style: 'display:grid;gap:10px;margin-top:12px' }, picBtn, h('button', { class: 'cta', type: 'button', onclick: add }, 'Karte hinzufügen'))),
-      msg,
-      h('section', { class: 'card' }, h('h3', null, 'Liste einfügen'), h('p', { class: 'lead' }, 'Zum Beispiel aus Quizlet oder einer Tabelle kopieren. Pro Zeile eine Karte.'), bulk,
-        h('button', { class: 'cta ghost', type: 'button', style: 'margin-top:12px', onclick: imp }, 'Einfügen')),
-      head('Deine Karten'), listEl);
-    draw();
+    }
+    const bulk = h('textarea', { rows: 5, placeholder: 'Frage;Antwort' });
+    view.append(backBtn(() => go(() => overview(t.subject), 'practice')), h('h1', null, 'Thema bearbeiten'),
+      h('section', { class: 'card' }, field('Name des Themas', title), field('Einleitung zum Lesetext', lead), field('Lesetext: Absätze durch Leerzeilen, erste Zeile jeweils Überschrift; Begriffe mit [[...]] markieren', text),
+        button('Thema und Lesetext speichern', () => {
+          if (!title.value.trim()) { msg.textContent = 'Bitte einen Namen eingeben.'; return; }
+          t.title = title.value.trim();
+          if (text.value.trim()) t.reading = { lead: lead.value.trim(), sections: text.value.trim().split(/\n\s*\n/).map(p => { const lines = p.split('\n'); return { h: lines.length > 1 ? lines.shift() : 'Zum Verstehen', p: lines }; }), check: t.reading?.check || [] };
+          else delete t.reading;
+          persist('Thema gespeichert.');
+        }), button('Themenpaket exportieren', () => exportTopic(t))),
+      h('section', { class: 'card' }, h('h2', null, 'Karte'), field('Frage', q), field('Antwort', a), photo,
+        h('div', { class: 'editor-actions' }, button('Foto auswählen', () => photo.click()), button('Foto entfernen', () => { image = null; imgStatus.textContent = 'Kein Foto'; }), imgStatus, add, button('Abbrechen', clear))), msg,
+      h('section', { class: 'card' }, field('Liste einfügen (Tab, ; oder | als Trennzeichen)', bulk), button('Karten einfügen', () => {
+        const rows = parse(bulk.value); if (!rows.length) { msg.textContent = 'Keine Karten erkannt.'; return; }
+        t.cards.push(...rows); bulk.value = ''; persist(rows.length + ' Karten hinzugefügt.'); draw();
+      })), list); draw();
   }
-
-  // Übersicht: Fach wählen
-  function overview() {
-    view.append(h('div', { class: 'topline' }, backBtn(() => go(() => ui.practice(), 'practice'))), h('h1', { class: 'ttl' }, 'Meine Karten'),
-      h('p', { class: 'lead' }, 'Schreib eigene Karten zu allem, was im Unterricht dran war. Sie erscheinen im Fach als Thema "Meine Karten".'),
-      h('div', { class: 'list' }, SUBJECTS.map(s => h('button', { class: 'deck', type: 'button', style: '--c:' + s.color, onclick: () => go(() => editor(s.id), 'learn') },
-        tileIco(s.icon), h('span', { class: 'grow' }, s.title, h('small', null, cards(s.id).length ? cards(s.id).length + ' eigene Karten' : 'noch keine')), svg('chevron', 'chev')))));
+  function overview(subject) {
+    const select = h('select', { 'aria-label': 'Fach für neues Thema' }, ...SUBJECTS.map(s => h('option', { value: s.id, selected: s.id === subject }, s.title)));
+    const name = h('input', { type: 'text', placeholder: 'Name deines neuen Themas', maxlength: 80 });
+    view.append(backBtn(() => go(ui.practice, 'practice')), h('h1', null, 'Eigene Themen'),
+      h('section', { class: 'card' }, field('Fach', select), field('Thema', name), button('Thema erstellen', () => {
+        if (!name.value.trim()) { name.focus(); return; }
+        const t = { id: 'own-' + L.newId(), subject: select.value, title: name.value.trim(), cards: [] }; S.topics.push(t); sync(); L.save(); go(() => editor(t));
+      })), ...S.topics.filter(t => !subject || t.subject === subject).map(t => button(t.title + ' · ' + t.cards.length + ' Karten', () => go(() => editor(t)))));
   }
-  LA.mineRow = subj => h('button', { class: 'deck', type: 'button', onclick: () => go(() => editor(subj), 'learn') },
-    tileIco('✍️'), h('span', { class: 'grow' }, 'Eigene Karten schreiben', h('small', null, cards(subj).length ? cards(subj).length + ' Karten von dir' : 'Foto, Liste einfügen oder tippen')), svg('chevron', 'chev'));
-  LA.mineAll = () => h('div', { class: 'list' }, h('button', { class: 'deck', type: 'button', onclick: () => go(overview, 'learn') },
-    tileIco('✍️'), h('span', { class: 'grow' }, 'Meine Karten', h('small', null, 'Eigene Karten schreiben oder einfügen')), svg('chevron', 'chev')));
+  L.syncTopics = sync; L.editTopic = t => go(() => editor(t)); L.exportTopic = exportTopic;
+  L.mineRow = subject => button('Eigene Themen bearbeiten', () => go(() => overview(subject), 'practice'));
+  L.mineAll = () => button('Eigene Themen erstellen und bearbeiten', () => go(() => overview(), 'practice'));
 })();

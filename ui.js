@@ -22,11 +22,13 @@
     return { seen, right, ok };
   };
   const startDeck = d => go(() => ui.deck(d));
-  const pickDeck = () => DECKS.find(x => x.id === (S.recent || [])[0]) || DECKS.find(x => x.id === 'en-family-vocab') || DECKS[0];
+  const pickDeck = () => LA.activeDecks().find(x => x.id === (S.recent || [])[0]) || LA.activeDecks().find(x => x.id === 'en-family-vocab') || LA.activeDecks()[0];
 
   // ---------- Lernen: Startseite ----------
   function home() {
-    const d = pickDeck(), sub = subjectOf(d), recent = !!(S.recent || []).length, lv = levelInfo();
+    const d = pickDeck();
+    if (!d) { view.append(h('h1', null, 'Dein Lernstoff'), h('p', null, 'Wähle Themen aus oder erstelle eigene Karten.'), h('button', { class: 'cta', type: 'button', onclick: () => go(ui.selection, 'learn') }, 'Lernstoff auswählen'), LA.mineAll()); return; }
+    const sub = subjectOf(d), recent = !!(S.recent || []).length, lv = levelInfo();
     const hero = h('section', { class: 'hero' },
       h('div', { class: 'hero-txt' },
         h('span', { class: 'hero-kick' }, recent ? 'Zuletzt geübt' : 'Dein Einstieg'),
@@ -37,7 +39,7 @@
     const wrap = h('div', { class: 'subjects ' + (S.layout === 'list' ? 'as-list' : 'as-grid') });
     const fill = () => {
       wrap.className = 'subjects ' + (S.layout === 'list' ? 'as-list' : 'as-grid');
-      wrap.replaceChildren(...SUBJECTS.map(subj => {
+      wrap.replaceChildren(...LA.visibleSubjects().map(subj => {
         const t = subjectStats(subj), w = wrongCount(subj);
         return h('button', { class: 'subj' + (t.decks ? '' : ' soon'), type: 'button', style: '--c:' + subj.color, onclick: () => go(() => ui.subject(subj), 'learn') },
           w ? h('span', { class: 'badge', title: 'Falsche Antworten' }, w) : '',
@@ -50,7 +52,7 @@
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
       h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.backupHint ? ui.backupHint() : '', ui.questCard ? ui.questCard() : '',
+      ui.journeyCard(), h('div', { class: 'editor-actions' }, h('button', { class: 'cta ghost', type: 'button', onclick: () => go(ui.search, 'learn') }, 'Suchen'), h('button', { class: 'cta ghost', type: 'button', onclick: () => go(ui.selection, 'learn') }, 'Mein Lernstoff')), hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.backupHint ? ui.backupHint() : '', ui.questCard ? ui.questCard() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
       head('Deine Fächer', toggle), wrap);
@@ -121,6 +123,8 @@
       h('header', { class: 'shd', style: '--c:' + sub.color }, tileIco(b.icon, 'lg'),
         h('div', { class: 'grow' }, h('h1', null, d.filter ? 'Falsche Antworten' : b.title),
           h('p', { class: 'lead' }, d.filter ? cardsOf(d).length + ' Karten zum Wiederholen' : pct + ' % sicher · ' + b.cards.length + ' Karten'))),
+      ui.evidence(d), LA.visual(d),
+      b.mine ? h('button', { class: 'cta ghost', type: 'button', onclick: () => LA.editTopic(S.topics.find(t => t.id === b.id)) }, 'Dieses Thema bearbeiten') : '',
       h('section', { class: 'sheet' },
         LA.readRow && !d.filter ? LA.readRow(d) : '',
         b.info && !d.filter ? h('button', { class: 'row-link', type: 'button', onclick: () => go(() => info(d)) }, tileIco('📖'),
@@ -151,8 +155,8 @@
   function practice() {
     const rows = SUBJECTS.map(s => ({ s, w: wrongCount(s) })).filter(x => x.w);
     const total = rows.reduce((n, x) => n + x.w, 0);
-    const recent = (S.recent || []).map(id => DECKS.find(x => x.id === id)).filter(Boolean);
-    const weak = DECKS.filter(d => cardsOf(d).some(c => LA.st(d, c).seen > 0) && deckPct(d) < 80).sort((a, b) => deckPct(a) - deckPct(b)).slice(0, 3);
+    const recent = (S.recent || []).map(id => LA.activeDecks().find(x => x.id === id)).filter(Boolean);
+    const weak = LA.activeDecks().filter(d => cardsOf(d).some(c => LA.st(d, c).seen > 0) && deckPct(d) < 80).sort((a, b) => deckPct(a) - deckPct(b)).slice(0, 3);
     const deckRow = d => h('button', { class: 'deck', type: 'button', style: '--c:' + subjectOf(d).color, onclick: () => startDeck(d) },
       tileIco(d.icon), h('span', { class: 'grow' }, d.title, h('small', null, subjectOf(d).title + ' · ' + deckPct(d) + ' % sicher'), bar(deckPct(d))), svg('chevron', 'chev'));
     view.append(
@@ -222,6 +226,8 @@
           e.currentTarget.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on');
         } }, l))),
       h('button', { class: 'deck', type: 'button', style: 'margin-top:16px', onclick: shareApp }, tileIco('💌'), h('span', { class: 'grow' }, 'App weitergeben', h('small', null, 'Link an eine Freundin schicken')), svg('chevron', 'chev')),
+      h('button', { class: 'cta ghost', type: 'button', onclick: () => go(ui.selection, 'profile') }, 'Mein Lernstoff'),
+      ui.examHistoryCard ? ui.examHistoryCard() : '',
       ui.backupCard ? ui.backupCard() : '',
       resetBtn, h('p', { class: 'ver' }, 'Version ' + LA.version));
   }
@@ -244,11 +250,17 @@
   Object.assign(ui, { welcome, home, subject, wrong, deck, info, practice, profile });
   if (S.name) go(home, 'learn'); else go(welcome);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    const had = !!navigator.serviceWorker.controller; let reloaded = false;
-    // Kommt eine neue Version, einmal neu laden (nicht mitten in einer Lernrunde).
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !reloaded && document.body.dataset.tab) { reloaded = true; location.reload(); } });
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; location.reload(); } });
     navigator.serviceWorker.register('sw.js').then(reg => {
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => { /* offline */ }); });
-    }).catch(() => { /* offline-Modus optional */ });
+      const offer = () => {
+        if (!reg.waiting || document.getElementById('app-update')) return;
+        const el = h('div', { id: 'app-update', class: 'update-notice', role: 'status' }, 'Neue Version verfügbar. ',
+          h('button', { type: 'button', onclick: () => { if (!document.body.dataset.tab) { LA.toast('📚', 'Nach der Runde aktualisieren', 'Kehre zuerst zur Startseite zurück.'); return; } if (save()) reg.waiting?.postMessage({ type: 'ACTIVATE_UPDATE' }); } }, 'Speichern und aktualisieren'));
+        document.body.append(el);
+      };
+      offer(); reg.addEventListener('updatefound', () => reg.installing?.addEventListener('statechange', offer));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
   }
 })();

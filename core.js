@@ -2,15 +2,27 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 32 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 33 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
 
   // ---------- Speicher ----------
-  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: {}, day: null, week: null, maxStreak: 0, freeze: 0, mine: {}, open: {}, fs: 'normal' });
+  const fresh = () => ({ xp: 0, last: '', streak: 0, cards: {}, best: {}, opts: {}, recent: [], fixed: 0, layout: 'grid', theme: 'light', got: {}, stats: { rounds: 0, perfect: 0, early: 0, late: 0 }, day: null, week: null, maxStreak: 0, freeze: 0, mine: {}, open: {}, fs: 'normal' });
   const S = fresh();
-  try { Object.assign(S, JSON.parse(localStorage.getItem('lernapp') || '{}')); } catch (e) { /* leer starten */ }
+  let loadFailure = false;
+  try {
+    const raw = localStorage.getItem('lernapp');
+    if (raw) { const data = window.LASchema.state(JSON.parse(raw)); if (!data) throw new Error('Ungültiger Speicherstand'); Object.assign(S, data); }
+  } catch (e) { loadFailure = true; }
+  function storageNotice(message) {
+    let el = document.getElementById('storage-warning');
+    if (!el) { el = document.createElement('div'); el.id = 'storage-warning'; el.className = 'storage-warning'; el.setAttribute('role', 'alert'); document.body.prepend(el); }
+    el.replaceChildren(document.createTextNode(message));
+    const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Sicherung / Wiederherstellung';
+    btn.onclick = () => LA.ui.profile && LA.go(LA.ui.profile, 'profile'); el.append(btn);
+  }
+  if (loadFailure) storageNotice('Dein gespeicherter Stand konnte nicht geladen werden. Er wird nicht überschrieben. Bitte eine Sicherung einlesen.');
   // Bestehende Nutzerin (vor der Namensfrage): Name Lana übernehmen. Neue Nutzer werden beim Start nach ihrem Namen gefragt.
   if (!S.name && (S.xp > 0 || S.last || (S.tests || []).length)) S.name = 'Lana';
   const applyTheme = () => { document.documentElement.dataset.theme = S.theme || 'light'; document.documentElement.dataset.fs = S.fs || 'normal'; };
@@ -29,12 +41,23 @@
     S.srs2 = 1;
   }
   if (!S.srs) { for (const o of Object.values(S.cards || {})) for (const s of Object.values(o)) if (s && s.box >= 3 && s.nd == null) s.nd = 2; S.srs = 1; }
-  const save = () => { try { localStorage.setItem('lernapp', JSON.stringify(S)); } catch (e) { /* ignorieren */ } };
+  const save = () => {
+    if (loadFailure) return false;
+    try { localStorage.setItem('lernapp', JSON.stringify(S)); document.getElementById('storage-warning')?.remove(); return true; }
+    catch (e) { storageNotice('Nicht auf diesem Gerät gespeichert. Lass die App geöffnet und sichere deinen aktuellen Stand als Datei.'); return false; }
+  };
   // Zurücksetzen löscht nur den Lernfortschritt. Darstellung, Testtermine und Notizen bleiben.
-  const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded, mine: S.mine, fs: S.fs }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
+  const reset = () => { const keep = { name: S.name, theme: S.theme || 'light', tests: S.tests, notes: S.notes, seeded: S.seeded, mine: S.mine, topics: S.topics, hiddenSubjects: S.hiddenSubjects, hiddenDecks: S.hiddenDecks, minutes: S.minutes, fs: S.fs }; for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), keep); save(); };
 
   // Stand aus einer Sicherung einsetzen (die Daten wurden vorher in backup.js geprüft).
-  const restore = d => { for (const k of Object.keys(S)) delete S[k]; Object.assign(S, fresh(), d); save(); };
+  const restore = d => {
+    const valid = window.LASchema.state(d); if (!valid) return false;
+    const next = Object.assign(fresh(), valid);
+    try { localStorage.setItem('lernapp', JSON.stringify(next)); }
+    catch (e) { storageNotice('Die Sicherung passt nicht in den Gerätespeicher. Der bisherige Stand bleibt erhalten.'); return false; }
+    for (const k of Object.keys(S)) delete S[k]; Object.assign(S, next); loadFailure = false;
+    document.getElementById('storage-warning')?.remove(); return true;
+  };
 
   // ---------- Helfer ----------
   function h(tag, attrs, ...kids) {
@@ -95,20 +118,34 @@
   const head = (title, right) => h('div', { class: 'sechead' }, h('h2', null, title), right || '');
   const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const dayStr = t => new Date(t).toISOString().slice(0, 10);
+  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* egal */ } };
 
   // ---------- Stoff ----------
   // "Falsche Antworten" ist ein gefilterter Blick (d.filter) auf ein Stoffpaket (d.base).
   const base = d => d.base || d;
+  const cardKey = r => {
+    const m = r[r.length - 1];
+    if (m && typeof m === 'object' && m.id) return m.id;
+    // Content identity, independent of ordering. Changed answers intentionally require relearning.
+    return 'c:' + JSON.stringify(r.filter(x => typeof x === 'string'));
+  };
+  const migrateCards = d => {
+    const records = S.cards[d.id]; if (!records) return;
+    const keys = (S.cardKeys || {})[d.id] || d.cards.map(cardKey);
+    for (const k of Object.keys(records)) if (/^\d+$/.test(k) && keys[+k]) { if (!records[keys[+k]]) records[keys[+k]] = records[k]; delete records[k]; }
+    S.cardKeys = S.cardKeys || {}; S.cardKeys[d.id] = d.cards.map(cardKey);
+  };
+  DECKS.forEach(migrateCards);
+  const activeDecks = () => DECKS.filter(d => !(S.hiddenSubjects || []).includes(d.subject) && !(S.hiddenDecks || []).includes(d.id));
   const cardsOf = d => d.cards.map((r, i) => {
     // Letztes Feld kann ein Zusatz-Objekt sein: { w: [falsche Antworten], e: 'Erklärung' }
     const m = r.length > 2 && r[r.length - 1] && typeof r[r.length - 1] === 'object' ? r[r.length - 1] : null;
-    return { i, q: r[0], a: r.slice(1, m ? -1 : undefined), w: m ? m.w || null : null, e: m ? m.e : undefined, img: m ? m.img : undefined };
+    return { i, key: cardKey(r), q: r[0], a: r.slice(1, m ? -1 : undefined), w: m ? m.w || null : null, e: m ? m.e : undefined, img: m ? m.img : undefined };
   }).filter(c => !d.filter || d.filter(c));
-  const decksOf = sub => DECKS.filter(d => d.subject === sub.id);
+  const decksOf = sub => activeDecks().filter(d => d.subject === sub.id);
   const subjectOf = d => SUBJECTS.find(s => s.id === base(d).subject);
-  const st = (d, c) => ((S.cards[d.id] = S.cards[d.id] || {})[c.i] = (S.cards[d.id] || {})[c.i] || { box: 0, seen: 0, right: 0 });
+  const st = (d, c) => { const id = base(d).id, key = c.key || String(c.i); const records = S.cards[id] = S.cards[id] || {}; return records[key] = records[key] || { box: 0, seen: 0, right: 0 }; };
   const wrongDeck = (d, sub) => Object.assign({}, d, {
     base: d, filter: c => !!st(d, c).wrong, title: 'Falsche Antworten · ' + d.title,
     back: () => LA.go(() => LA.ui.wrong(sub), 'learn')
@@ -162,7 +199,7 @@
     S.maxStreak = Math.max(S.maxStreak || 0, S.streak);
   }
   // soft = Raten ist möglich (Richtig/Falsch): richtig zählt nur halb und schiebt die Karte nicht weiter.
-  function rate(d, c, ok, soft) {
+  function rate(d, c, ok, soft, method = 'recognition') {
     bump();
     const s = st(d, c), was = s.wrong;
     s.seen++;
@@ -170,9 +207,14 @@
     const today = dnum();
     if (ok) {
       s.right++;
-      if (!soft) { s.box = Math.min(4, s.box + 1); if (s.lastOk !== today) { s.lastOk = today; s.nd = (s.nd || 0) + 1; } s.due = today + INTERVALS[s.box]; }
+      if (!soft) {
+        if (s.lastAdvance !== today) { s.box = Math.min(4, s.box + 1); s.lastAdvance = today; }
+        if (s.lastOk !== today) { s.lastOk = today; s.nd = (s.nd || 0) + 1; }
+        s.due = today + INTERVALS[s.box];
+        const kind = method === 'recall' ? 'recall' : 'recognition'; s[kind] = (s[kind] || 0) + 1;
+      }
       addXp(soft ? 5 : 10); if (was) S.fixed = (S.fixed || 0) + 1;
-    } else { s.box = Math.max(0, s.box - 1); s.due = today; addXp(2); }
+    } else { s.box = Math.max(0, s.box - 1); s.due = today; s.lastAdvance = today; addXp(2); }
     save();
     if (LA.onRate) LA.onRate(d, c, ok, !!was);
   }
@@ -289,7 +331,7 @@
   // Vorlesen mit der Sprachausgabe des Geräts (nur für Englisch und Spanisch).
   const speakLang = d => { const b = base(d); if (b.speak) return b.speak; if (b.subject === 'spanisch') return 'es-ES'; if (b.subject === 'englisch' && /^(en-unit|en-family|en-relationship|irregular|en-sa-peer)/.test(b.id)) return 'en-GB'; return null; };
   const speak = (text, lang) => { try { const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { /* kein Vorlesen möglich */ } };
-  Object.assign(LA, { dnum, sure, isDue, speak, speakLang, INTERVALS, sentence, filled, explainLines, restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
+  Object.assign(LA, { dayStr, cardKey, migrateCards, activeDecks, storageNotice, dnum, sure, isDue, speak, speakLang, INTERVALS, sentence, filled, explainLines, restore, RANKS, addXp, bar, backBtn, tileIco, head, newId, DECKS, SUBJECTS, S, save, reset, applyTheme, h, svg, ring, shuffle, buzz, base, cardsOf, decksOf, subjectOf, st, wrongDeck, wrongCount,
     goBack, opt, prompt, ans, labels, ansText, mastered, deckPct, subjectStats, levelInfo, streakNow, bump, rate, touch, pick, cfg,
     splitVar, norm, variants, fieldOk, matches, options, view, go });
 })();

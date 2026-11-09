@@ -15,7 +15,7 @@
   };
 
   // ---------- Karten sammeln ----------
-  const peek = it => ((S.cards[it.d.id] || {})[it.c.i]);   // nur lesen, legt nichts an
+  const peek = it => ((S.cards[it.d.id] || {})[it.c.key || String(it.c.i)]);   // nur lesen, legt nichts an
   const itemsOf = decks => decks.flatMap(d => cardsOf(base(d)).map(c => ({ d: base(d), c })));
   const dueItems = decks => itemsOf(decks).filter(it => LA.isDue(peek(it)));
   // Wichtigkeit: fällig, schwach (niedrige Box) und noch nie gesehen kommen zuerst, mit etwas Zufall.
@@ -116,6 +116,7 @@
     run({ items: best(all, 15), typing: true, back: back(t), tab: 'plan', again: () => trainTest(t) });
   }
   function probeTest(t) {
+    if (LA.exam) return LA.exam(t);
     const all = testItems(t); if (all.length < 5) return few();
     const items = shuffle(all).slice(0, 20), sub = LA.subjectOf(items[0].d);
     probe({ items, minutes: Math.max(5, Math.ceil(items.length * .75)), scale: SCALES[sub && sub.id] || [50, 65, 80, 90], back: back(t), tab: 'plan', again: () => probeTest(t) });
@@ -127,7 +128,7 @@
   function dueSession() {
     const t = LA.nextTestObj && LA.nextTestObj();
     focus = t ? LA.testDecks(t).map(d => d.id) : [];
-    const items = best(dueItems(DECKS), 15); focus = []; if (!items.length) return;
+    const items = best(dueItems(LA.activeDecks()), 15); focus = []; if (!items.length) return;
     run({ items, typing: true, back: () => ui.home(), tab: 'learn', again: dueSession });
   }
 
@@ -137,7 +138,7 @@
     const row = (ico, title, sub, fn) => h('button', { class: 'deck', type: 'button', onclick: fn }, tileIco(ico), h('span', { class: 'grow' }, title, h('small', null, sub)), svg('chevron', 'chev'));
     return h('div', { class: 'list' },
       row('🎯', 'Heute für den Test üben', 'Die 15 wichtigsten Karten aus allen Testthemen', () => trainTest(t)),
-      row('📝', 'Probetest', q + ' Fragen, ' + Math.max(5, Math.ceil(q * .75)) + ' Minuten, Note am Ende', () => probeTest(t)),
+      row('📝', 'Gemischter Probetest', 'Auswahl, eigene Antworten und verfügbare Textaufgaben', () => probeTest(t)),
       row('👹', 'Boss-Runde', '10 schwächste Karten, 3 Leben', () => boss(t)));
   };
 
@@ -155,7 +156,7 @@
 
   // ---------- Startseite: Heute fällig ----------
   ui.dueCard = () => {
-    const n = dueItems(DECKS).length; if (!n) return '';
+    const n = dueItems(LA.activeDecks()).length; if (!n) return '';
     const today = Math.min(15, n), rest = n - today;
     return h('button', { class: 'nexttest', type: 'button', style: '--c:var(--pri)', onclick: dueSession },
       h('span', { class: 'dateblock' }, h('b', null, today), h('small', null, 'heute')),

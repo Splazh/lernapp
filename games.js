@@ -47,7 +47,7 @@
   // Hinweis auf der Startseite, wenn die letzte Sicherung lange her ist (nur wenn schon etwas gelernt wurde)
   ui.backupHint = () => {
     const days = S.lastBackup ? Math.floor((Date.now() - S.lastBackup) / 864e5) : 99;
-    if (S.xp < 150 || days < 7 || (S.hintSnooze && Date.now() - S.hintSnooze < 3 * 864e5)) return '';
+    if ((S.xp < 150 && !(S.topics || []).some(t => t.cards.length) && !(S.notes || []).length) || days < 7 || (S.hintSnooze && Date.now() - S.hintSnooze < 3 * 864e5)) return '';
     return h('button', { class: 'nexttest', type: 'button', style: '--c:#FFD166', onclick: () => { S.hintSnooze = Date.now(); LA.save(); go(() => ui.profile(), 'profile'); } },
       h('span', { class: 'dateblock' }, h('b', null, '💾')),
       h('span', { class: 'grow' }, h('strong', null, 'Sicherung fällig'), h('small', null, S.lastBackup ? 'Zuletzt vor ' + days + ' Tagen. Tippe zum Sichern.' : 'Noch nie gesichert. Tippe zum Sichern.')), svg('chevron', 'chev'));

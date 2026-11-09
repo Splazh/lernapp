@@ -36,7 +36,7 @@ window.READ = Object.assign(window.READ || {}, {
     lead: 'Vulkane sind kein Zufall, sie sitzen dort, wo die Plattentektonik Magma nach oben lässt. Wie ein Vulkan ausbricht, hängt vom Magma ab.',
     sections: [
       { h: 'Wo entstehen Vulkane?', p: [
-        'Es gibt drei Entstehungsarten. An [[Riftvulkanen]] driften Platten auseinander und Magma steigt in die Lücke, zum Beispiel auf Island. Bei [[Subduktionsvulkanen]] taucht eine Platte ab, schmilzt teilweise und das Magma steigt auf (Mount St. Helens, Anden). Bei [[Hotspot-Vulkanen]] steht eine Magmaquelle im Mantel wie eine Kerze still, während die Platte darüber wandert. So entsteht eine Inselkette wie auf Hawaii.' ] },
+        'Es gibt drei Entstehungsarten. An [[Riftvulkanen]] driften Platten auseinander und Magma steigt in die Lücke, zum Beispiel auf Island. Bei [[Subduktionsvulkanen]] taucht eine Platte ab und setzt Wasser frei. Das erleichtert das teilweise Schmelzen im darüberliegenden Mantel; Magma steigt auf (Mount St. Helens, Anden). Bei [[Hotspot-Vulkanen]] steht eine Magmaquelle im Mantel wie eine Kerze still, während die Platte darüber wandert. So entsteht eine Inselkette wie auf Hawaii.' ] },
       { h: 'Magma bestimmt den Ausbruch', p: [
         'Entscheidend ist die Kieselsäure im Magma. [[Basisches Magma]] (zum Beispiel Basalt) hat wenig davon, ist dünnflüssig, Gas kann entweichen und der Ausbruch ist eher ruhig. [[Saures Magma]] (zum Beispiel Rhyolith) hat viel Kieselsäure, ist zäh, Gas staut sich und der Ausbruch ist explosiv. Merke: Mehr Kieselsäure bedeutet zäher und explosiver.' ] },
       { h: 'Formen von Vulkanen', p: [

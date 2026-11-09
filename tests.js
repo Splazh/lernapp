@@ -27,14 +27,7 @@
     save();
   }
   const tests = () => (S.tests = S.tests || []);
-  // Schon gespeicherter, noch leerer Englisch-Test vom 11.11.: Stoff und Themen eintragen.
-  (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && !(t.decks || []).length).forEach(t => { t.decks = SA_DECKS.slice(); if (!t.stoff) t.stoff = SA_STOFF; save(); });
-  // Neue Schularbeit-Themen auch in den schon befüllten Test aufnehmen.
-  (S.tests || []).filter(t => t.subj === 'englisch' && t.date === '2026-11-11' && (t.decks || []).includes('en-sa-aufbau')).forEach(t => { SA_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
-  // Schon gespeicherter Geografie-Test: leer befüllen, sonst fehlende Themen ergänzen.
-  (S.tests || []).filter(t => t.subj === 'geografie' && /Test/.test(t.title || '')).forEach(t => { t.decks = t.decks || []; if (t.date === '2026-11-27') t.date = '2026-11-13'; if (!t.skipInit) { t.skip = GEO_LATER.slice(); t.skipInit = true; } if (!t.stoff) t.stoff = GEO_STOFF; GEO_DECKS.forEach(id => { if (!t.decks.includes(id)) t.decks.push(id); }); save(); });
-  // Neue Wortschatz-Themen auch in den schon gespeicherten Check-Up aufnehmen.
-  (S.tests || []).filter(t => t.seed || (t.title === '1st Check-Up' && t.date === '2026-11-04')).forEach(t => { t.seed = true; (t.decks = t.decks || []); ['en-unit1-words', 'en-unit2-words', 'en-unit2-more', 'en-unit2-test'].forEach(id => { if (!t.decks.includes(id)) t.decks.unshift(id); }); });
+  // Course-specific historical migrations ended in v32. Never rewrite user-created dates or topics.
 
   // ---------- Datum ----------
   const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -66,7 +59,7 @@
     const sub = SUBJECTS.find(s => s.id === t.subj) || SUBJECTS[0], r = readiness(t);
     return h('button', { class: 'nexttest', type: 'button', style: '--c:' + sub.color, onclick: () => go(() => ui.test(t), 'plan') },
       h('span', { class: 'dateblock' }, h('b', null, parse(t.date).getDate()), h('small', null, MONTHS[parse(t.date).getMonth()])),
-      h('span', { class: 'grow' }, h('strong', null, t.title), h('small', null, sub.title + ' · ' + when(t) + (r.has ? ' · ' + r.pct + ' % bereit' : '')), r.has ? bar(r.pct) : ''),
+      h('span', { class: 'grow' }, h('strong', null, t.title), h('small', null, sub.title + ' · ' + when(t) + (r.has ? ' · ' + r.pct + ' % Karten sicher' : '')), r.has ? bar(r.pct) : ''),
       svg('chevron', 'chev'));
   };
 
@@ -77,7 +70,7 @@
       const sub = SUBJECTS.find(s => s.id === t.subj) || SUBJECTS[0], r = readiness(t), d = parse(t.date), n = daysLeft(t);
       return h('button', { class: 'deck test' + (n >= 0 && n <= 2 ? ' soon' : ''), type: 'button', style: '--c:' + sub.color, onclick: () => go(() => ui.test(t), 'plan') },
         h('span', { class: 'dateblock' }, h('b', null, d.getDate()), h('small', null, MONTHS[d.getMonth()])),
-        h('span', { class: 'grow' }, t.title, h('small', null, sub.title + ' · ' + when(t) + (r.has ? ' · ' + r.pct + ' % bereit' : ' · noch kein Stoff verknüpft')), r.has ? bar(r.pct) : ''),
+        h('span', { class: 'grow' }, t.title, h('small', null, sub.title + ' · ' + when(t) + (r.has ? ' · ' + r.pct + ' % Karten sicher' : ' · noch kein Stoff verknüpft')), r.has ? bar(r.pct) : ''),
         svg('chevron', 'chev'));
     };
     view().append(

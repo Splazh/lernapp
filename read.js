@@ -15,19 +15,20 @@
   const clozeSents = r => r.sections.flatMap(s => s.p).flatMap(p => p.split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ\[])/)).filter(s => (s.match(/\[\[/g) || []).length === 1);
   const terms = r => [...new Set(r.sections.flatMap(s => s.p).flatMap(p => [...p.matchAll(/\[\[(.+?)\]\]/g)].map(m => m[1])))];
 
-  function read(d) {
+  function read(d, onDone) {
     const r = get(d), b = base(d), sub = subjectOf(d), tl = terms(r);
     view.append(
       h('div', { class: 'topline' }, backBtn(() => go(() => ui.deck(d)))),
       h('header', { class: 'shd', style: '--c:' + sub.color }, tileIco(b.icon, 'lg'), h('div', { class: 'grow' }, h('h1', null, b.title), h('p', { class: 'lead' }, 'Zum Einlesen, dann üben'))),
       h('section', { class: 'card readlead' }, h('p', null, r.lead)),
+      LA.visual ? LA.visual(d) : '',
       ...r.sections.map(s => h('section', { class: 'card readsec' }, h('h2', null, s.h), s.p.map(p => h('p', null, rich(p))))),
       h('section', { class: 'card info' }, h('h3', null, 'Schlüsselbegriffe'), h('div', { class: 'keys' }, tl.map(t => h('span', { class: 'chip' }, t)))),
       r.check && r.check.length ? h('section', { class: 'card info' }, h('h3', null, 'Hast du es verstanden?'), h('p', { class: 'lead' }, 'Beantworte die Fragen im Kopf, dann tippe zum Aufdecken.'),
         r.check.map(([q, a]) => h('details', { class: 'chkq', onclick: () => mark(d) }, h('summary', null, q), h('p', null, a)))) : '',
       h('div', { class: 'stackbtn', style: 'margin:18px 0 120px' },
         tl.length >= 4 && clozeSents(r).length >= 4 ? h('button', { class: 'cta ghost', type: 'button', onclick: () => { mark(d); go(() => cloze(d)); } }, 'Lückentext aus diesem Text') : ''));
-    view.append(h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => { mark(d); go(() => ui.deck(d)); } }, 'Jetzt mit Karten üben')));
+    view.append(h('div', { class: 'dock plain' }, h('button', { class: 'cta', type: 'button', onclick: () => { mark(d); if (onDone) onDone(); else go(() => ui.deck(d)); } }, onDone ? 'Weiter: Verständnis prüfen' : 'Jetzt mit Karten üben')));
   }
 
   // Lückentext aus dem Lesetext: Sätze mit genau einem Begriff, Wortkasten mit zwei Extra-Wörtern

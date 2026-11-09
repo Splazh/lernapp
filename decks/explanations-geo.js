@@ -38,7 +38,7 @@ window.EXPL = Object.assign(window.EXPL || {}, {
  "geo-vulkane": {
   "Riftvulkan": "Wo Platten auseinanderbrechen (Rift), steigt Magma auf. Island liegt auf dem Mittelatlantischen Rücken.",
   "Hotspot-Vulkan": "Ein Hotspot ist eine ortsfeste heiße Stelle im Mantel, unabhängig von Plattengrenzen. Beispiel: Hawaii.",
-  "Subduktionsvulkan": "Wo eine Platte abtaucht, schmilzt sie teilweise. Das Magma steigt auf. Diese Vulkane sind oft sehr gefährlich, zum Beispiel Mount St. Helens.",
+  "Subduktionsvulkan": "Die abtauchende Platte setzt Wasser frei. Dadurch kann Gestein im darüberliegenden Mantel teilweise schmelzen. Das Magma steigt auf. Diese Vulkane sind oft sehr gefährlich, zum Beispiel Mount St. Helens.",
   "Die Platte wandert über einen ortsfesten Hotspot": "Der Hotspot bleibt stehen wie eine Kerze, die Platte zieht darüber. Immer wieder entsteht ein neuer Vulkan, die alten wandern mit der Platte weiter: eine Inselkette.",
   "dünnflüssig und wenig explosiv": "Basisches Magma hat wenig Kieselsäure (zum Beispiel Basalt). Es fließt leicht, Gase entweichen leicht, darum gibt es kaum Explosionen.",
   "zäh und explosiv": "Saures Magma enthält viel Kieselsäure und ist zäh. Gase kommen kaum heraus, der Druck steigt, bis es explosiv ausbricht.",

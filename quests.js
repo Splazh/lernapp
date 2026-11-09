@@ -32,7 +32,7 @@
     if (!S.week || S.week.w !== k) S.week = { w: k, days: [], right: 0, rounds: 0, subj: [], claimed: {} };
     return S.week;
   }
-  const stats = () => (S.stats = S.stats || { rounds: 0, perfect: 0, early: 0, late: 0 });
+  const stats = () => { S.stats = S.stats || {}; for (const k of ['rounds', 'perfect', 'early', 'late']) if (!Number.isFinite(S.stats[k])) S.stats[k] = 0; return S.stats; };
   const add = (arr, v) => { if (!arr.includes(v)) arr.push(v); };
 
   LA.onRate = (d, c, ok, wasWrong) => {

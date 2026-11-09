@@ -32,9 +32,8 @@
 
   // Erklärung nach einer falschen Antwort. Nur beim Wiederholen unter "Falsche Antworten" (d.filter), nie in normalen Runden.
   function explainBox(d, c) {
-    if (!d.filter) return '';
     const l = LA.explainLines(d, c);
-    return l.length ? h('div', { class: 'explain' }, h('strong', null, 'Erklärung'), l.map(t => h('p', null, t))) : '';
+    return l.length ? h('details', { class: 'explain' }, h('summary', null, 'Warum ist das richtig?'), l.map(t => h('p', null, t))) : '';
   }
 
   // ---------- Start einer Runde ----------
@@ -69,7 +68,7 @@
       card.classList.add('turned');
       plainDock(speakBtn(d, c),
         h('button', { class: 'cta ghost bad', onclick: () => { rate(d, c, false); done(false); } }, 'Nochmal'),
-        h('button', { class: 'cta good', onclick: () => { rate(d, c, true); done(true); } }, 'Gewusst'));
+        h('button', { class: 'cta good', onclick: () => { rate(d, c, true, false, 'recall'); done(true); } }, 'Gewusst'));
     });
     view.append(top(d, i, n), card);
   }
@@ -110,7 +109,7 @@
         if (!res[k]) inp.parentNode.append(h('em', { class: 'sol' }, splitVar(sol[k]).join('  oder  ')));
       });
       if (!allOk) { buzz(60); const x = explainBox(d, c); if (x) view.append(x); }
-      rate(d, c, allOk);
+      rate(d, c, allOk, false, 'recall');
       dock(allOk, allOk ? 'Richtig!' : 'Fast', allOk ? '+10 XP' : 'Die Lösung steht unter dem Feld.', () => done(allOk));
     }
     inputs.forEach((inp, k) => inp.addEventListener('keydown', e => {
