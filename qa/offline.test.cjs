@@ -22,20 +22,20 @@ function worker({ fail = '', offline = false } = {}) {
     request: async (file, mode = 'cors') => { let pending; listeners.fetch({ request: { url: key(file), method: 'GET', mode }, respondWith: p => { pending = p; } }); return pending; } };
 }
 test('complete release installs all assets and waits for explicit update', async () => {
-  const w = worker(); await w.event('install'); assert.ok(w.stores.get('lernapp-v34').size > 40); assert.equal(w.activated(), false);
+  const w = worker(); await w.event('install'); assert.ok(w.stores.get('lernapp-v35').size > 40); assert.equal(w.activated(), false);
   w.listeners.message({ data: { type: 'ACTIVATE_UPDATE' } }); assert.equal(w.activated(), true);
 });
 test('failed install never leaves a partial release as a usable cache', async () => {
-  const w = worker({ fail: 'core.js' }); await assert.rejects(w.event('install')); assert.equal(w.stores.has('lernapp-v34'), false);
+  const w = worker({ fail: 'core.js' }); await assert.rejects(w.event('install')); assert.equal(w.stores.has('lernapp-v35'), false);
 });
 test('activation deletes only this app old caches', async () => {
   const w = worker(); await w.caches.open('other-app'); await w.caches.open('lernapp-v33'); await w.event('install'); await w.event('activate');
-  assert.ok(w.stores.has('other-app')); assert.ok(w.stores.has('lernapp-v34')); assert.equal(w.stores.has('lernapp-v33'), false);
+  assert.ok(w.stores.has('other-app')); assert.ok(w.stores.has('lernapp-v35')); assert.equal(w.stores.has('lernapp-v33'), false);
 });
 test('cached scripts and navigation work offline without a network request', async () => {
-  const w = worker({ offline: true }), cache = await w.caches.open('lernapp-v34');
+  const w = worker({ offline: true }), cache = await w.caches.open('lernapp-v35');
   await cache.put('core.js', new Response('script')); await cache.put('index.html', new Response('page'));
-  assert.equal(await (await w.request('core.js?v=34')).text(), 'script'); assert.equal(await (await w.request('route', 'navigate')).text(), 'page'); assert.equal(w.calls.length, 0);
+  assert.equal(await (await w.request('core.js?v=35')).text(), 'script'); assert.equal(await (await w.request('route', 'navigate')).text(), 'page'); assert.equal(w.calls.length, 0);
 });
 test('missing offline script returns an error rather than HTML', async () => {
   const w = worker({ offline: true }), result = await w.request('missing.js'); assert.equal(result.status, 503); assert.match(result.headers.get('Content-Type'), /text\/plain/);

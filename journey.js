@@ -61,13 +61,8 @@
   }
   ui.journeyCard = () => {
     const choose = h('select', { 'aria-label': 'Zeit für eine Lernrunde', onchange: e => { S.minutes = +e.target.value; L.save(); } }, ...[5, 10, 15, 20].map(n => h('option', { value: n, selected: n === (S.minutes || 10) }, n + ' Minuten')));
-    return h('section', { class: 'card journey' },
-      h('div', { class: 'journey-heading' }, h('span', { class: 'journey-mark', 'aria-hidden': 'true' }, L.svg('book')), h('span', null, pending() ? 'Deine Runde wartet auf dich' : 'Zeit für deinen nächsten Schritt')),
-      h('h2', null, 'In Ruhe verstehen.\nSicherer werden.'),
-      h('p', null, 'Ein Thema verstehen, selbst erklären und das Gelernte abrufen. In deinem Tempo.'),
-      h('div', { class: 'journey-controls' }, h('label', { class: 'field' }, h('span', null, 'Zeit für dich'), choose),
-        h('button', { class: 'cta', type: 'button', onclick: start }, pending() ? 'Lernrunde fortsetzen' : 'Lernrunde starten')),
-      h('small', { class: 'journey-foot' }, 'Ungefähre Dauer · jederzeit pausieren'));
+    return h('section', { class: 'card journey' }, h('h2', null, 'Dein nächster Lernschritt'), h('p', null, 'Verstehen → selbst erklären → üben → später wiederholen'),
+      h('div', { class: 'journey-controls' }, h('label', { class: 'field' }, h('span', null, 'Ungefähre Dauer'), choose), h('button', { class: 'cta', type: 'button', onclick: start }, pending() ? 'Lernrunde fortsetzen' : 'Geführte Lernrunde starten')));
   };
   L.journey = { plan, start, resume };
 })();
