@@ -35,7 +35,7 @@
         h('h2', null, d.title), h('p', null, sub.title + ' · ' + deckPct(d) + ' % sicher'),
         h('button', { class: 'cta light', type: 'button', onclick: () => startDeck(d) }, recent ? 'Weiter' : 'Los geht\'s')),
       h('div', { class: 'hero-ring' }, LA.ring(deckPct(d), { size: 92, stroke: 9 }), h('b', null, deckPct(d) + '%')));
-    const stat = (cls, ico, v, l) => h('div', { class: 'mini ' + cls }, h('span', null, ico), h('strong', null, v), h('small', null, l));
+    const stat = (cls, ico, v, l) => h('div', { class: 'mini ' + cls }, h('strong', null, v), h('small', null, l));
     const wrap = h('div', { class: 'subjects ' + (S.layout === 'list' ? 'as-list' : 'as-grid') });
     const fill = () => {
       wrap.className = 'subjects ' + (S.layout === 'list' ? 'as-list' : 'as-grid');
@@ -51,11 +51,12 @@
       ['grid', 'list'].map(k => h('button', { type: 'button', 'aria-label': k === 'grid' ? 'Kacheln' : 'Liste', class: S.layout === k ? 'on' : '',
         onclick: e => { S.layout = k; save(); toggle.querySelectorAll('button').forEach(b => b.classList.remove('on')); e.currentTarget.classList.add('on'); fill(); } }, svg(k))));
     view.append(
-      h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Was lernen wir heute?')), avatar()),
-      ui.journeyCard(), h('div', { class: 'editor-actions' }, h('button', { class: 'cta ghost', type: 'button', onclick: () => go(ui.search, 'learn') }, 'Suchen'), h('button', { class: 'cta ghost', type: 'button', onclick: () => go(ui.selection, 'learn') }, 'Mein Lernstoff')), hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.backupHint ? ui.backupHint() : '', ui.questCard ? ui.questCard() : '',
+      h('header', { class: 'hd' }, h('div', null, h('p', { class: 'hi' }, 'Hallo ' + nm() + ','), h('h1', null, 'Dein Raum zum Lernen.')), avatar()),
+      h('div', { class: 'home-tools' }, h('button', { class: 'search-launch', type: 'button', onclick: () => go(ui.search, 'learn') }, svg('search'), h('span', null, 'Themen und Karten suchen')), h('button', { class: 'library-launch', type: 'button', onclick: () => go(ui.selection, 'learn') }, 'Mein Lernstoff')),
+      ui.journeyCard(), hero, ui.nextTest ? ui.nextTest() : '', ui.dueCard ? ui.dueCard() : '', ui.backupHint ? ui.backupHint() : '',
       h('div', { class: 'minis' }, stat('m1', '🔥', streakNow(), 'Tage Serie'), stat('m2', '⭐', S.xp, 'XP'),
         stat('m3', '🏆', 'Level ' + lv.lvl, lv.into + ' / ' + lv.need + ' XP')),
-      head('Deine Fächer', toggle), wrap);
+      head('Deine Fächer', toggle), wrap, ui.questCard ? ui.questCard() : '');
     fill();
   }
 

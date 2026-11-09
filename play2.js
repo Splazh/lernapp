@@ -38,25 +38,32 @@
     return ch.map((x, k) => hide.has(k) ? '_' : x).join('').split(' ').map(w => [...w].join(' ')).join('    ');
   }
   modes.gap = (d, c, n, i, done) => {
-    const sol = ans(d, c), sent = LA.sentence(d, c), cloze = !!sent && sol.length === 1;
+    const sol = ans(d, c), sent = LA.sentence(d, c) || (c.q.includes('___') ? c.q : null);
+    const cloze = !!sent && (sent.match(/___/g) || []).length === sol.length;
     const inputs = sol.map(() => h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'done' }));
-    let blank = null, card;
+    const blanks = []; let card;
     if (cloze) {
-      const [a, b] = sent.split('___');
-      blank = h('span', { class: 'blank' }, '_____');
-      card = h('div', { class: 'qcard cloze' }, h('div', { class: 'cz' }, a, blank, b), h('div', { class: 'ql' }, 'Gesucht: ' + prompt(d, c)));
+      const parts = sent.split('___');
+      const text = parts.flatMap((part, k) => {
+        if (k === sol.length) return [part];
+        const blank = h('span', { class: 'blank' }, sol.length > 1 ? String(k + 1) : '_____'); blanks.push(blank);
+        return [part, blank];
+      });
+      card = h('div', { class: 'qcard cloze' }, h('div', { class: 'cz' }, text),
+        h('div', { class: 'ql' }, sol.length > 1 ? 'Fülle alle Lücken in der Reihenfolge des Satzes.' : 'Ergänze die fehlende Form.'));
     } else {
       card = h('div', { class: 'qcard' }, h('div', { class: 'q' }, prompt(d, c)),
-        sol.map((s, k) => h('div', { class: 'pat' }, labels(d)[k] ? h('small', null, labels(d)[k]) : '', h('span', null, pattern(splitVar(s)[0])))));
+        sol.map((s, k) => h('div', { class: 'pat' }, labels(d, c)[k] ? h('small', null, labels(d, c)[k]) : '', h('span', null, pattern(splitVar(s)[0])))));
     }
-    const fields = h('div', { class: 'fields' }, sol.map((s, k) => h('label', { class: 'field' }, h('span', null, cloze ? 'Das fehlende Wort' : (labels(d)[k] || 'Ganzes Wort')), inputs[k])));
+    const fields = h('div', { class: 'fields' }, sol.map((s, k) => h('label', { class: 'field' }, h('span', null, sol.length > 1 ? (labels(d, c)[k] || 'Antwort ' + (k + 1)) : cloze ? 'Die fehlende Form' : (labels(d, c)[k] || 'Ganzes Wort')), inputs[k])));
     function check() {
+      if (inputs[0].readOnly) return;
       const res = inputs.map((inp, k) => fieldOk(inp.value, sol[k])), allOk = res.every(Boolean);
       inputs.forEach((inp, k) => {
         inp.readOnly = true; inp.parentNode.classList.add(res[k] ? 'ok' : 'no');
         if (!res[k]) inp.parentNode.append(h('em', { class: 'sol' }, splitVar(sol[k]).join('  oder  ')));
       });
-      if (blank) { blank.textContent = splitVar(sol[0])[0]; blank.classList.add(allOk ? 'ok' : 'no'); }
+      blanks.forEach((blank, k) => { blank.textContent = splitVar(sol[k])[0]; blank.classList.add(res[k] ? 'ok' : 'no'); });
       if (!allOk) { buzz(60); const x = K.explainBox(d, c); if (x) view.append(x); }
       rate(d, c, allOk, false, 'recall');
       K.dock(allOk, allOk ? 'Richtig!' : 'Fast', allOk ? '+10 XP' : 'Die Lösung steht unter dem Feld.', () => done(allOk));
@@ -94,6 +101,7 @@
       if (go1) go1.disabled = bank.length > 0;
     };
     function check() {
+      if (inputs[0].readOnly) return;
       locked = true;
       const ok = placed.every((p, k) => p.x === want[k]);
       area.classList.add(ok ? 'ok' : 'no'); if (!ok) buzz(60);

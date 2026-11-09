@@ -46,8 +46,15 @@
           const choices = h('div', { class: 'opts' });
           const draw = () => choices.replaceChildren(...task.options.map(value => h('button', { class: 'opt' + (response.value === value ? ' selected' : ''), type: 'button', 'aria-pressed': String(response.value === value), onclick: () => { response.value = value; draw(); } }, value)));
           draw(); view.append(choices);
+        } else if (task.it && L.ans(task.it.d, task.it.c).length > 1) {
+          const values = response.value.split(' – '), labels = L.labels(task.it.d, task.it.c);
+          const inputs = L.ans(task.it.d, task.it.c).map((_, k) => {
+            const input = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', oninput: () => { response.value = inputs.map(x => x.value).join(' – '); } });
+            input.value = values[k] || ''; return input;
+          });
+          view.append(h('div', { class: 'fields' }, inputs.map((input, k) => h('label', { class: 'field' }, h('span', null, labels[k] || 'Antwort ' + (k + 1)), input))));
         } else {
-          const input = h('textarea', { rows: task.kind === 'open' ? 6 : 2, 'aria-label': 'Deine Antwort', oninput: e => { response.value = e.target.value; } }); input.value = response.value; view.append(input); if (task.it && L.ans(task.it.d, task.it.c).length > 1) view.append(h('p', null, 'Mehrere Formen bitte mit „ – “ trennen: ' + L.labels(task.it.d).join(' – ')));
+          const input = h('textarea', { rows: task.kind === 'open' ? 6 : 2, 'aria-label': 'Deine Antwort', oninput: e => { response.value = e.target.value; } }); input.value = response.value; view.append(input);
         }
         view.append(h('div', { class: 'editor-actions' }, i ? h('button', { class: 'cta ghost', type: 'button', onclick: () => { i--; show(); } }, 'Vorherige Aufgabe') : '',
           h('button', { class: 'cta', type: 'button', onclick: () => { if (window.speechSynthesis) speechSynthesis.cancel(); i++; show(); } }, i === tasks.length - 1 ? 'Abgeben' : 'Weiter (auch ohne Antwort)')));

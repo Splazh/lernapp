@@ -2,7 +2,7 @@
 // Die Oberfläche steht in ui.js, die Lernarten in play.js. Gemeinsamer Zugriff über window.LA.
 (() => {
   'use strict';
-  const LA = window.LA = { ui: {}, timer: null, version: 33 }; // gleiche Nummer wie in sw.js
+  const LA = window.LA = { ui: {}, timer: null, version: 34 }; // gleiche Nummer wie in sw.js
   const DECKS = window.DECKS || [];
   const SUBJECTS = window.SUBJECTS || [];
   const view = document.getElementById('view');
@@ -73,6 +73,7 @@
   }
   // Kleine Strich-Icons (24x24). Pfade sind feste Texte aus diesem Code.
   const ICONS = {
+    search: 'M10.5 3a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15M16 16l5 5',
     close: 'M6 6l12 12M18 6L6 18', back: 'M15 5l-7 7 7 7', chevron: 'M9 5l7 7-7 7',
     home: 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z',
     target: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
@@ -155,7 +156,8 @@
   const opt = d => (S.opts[d.id] = S.opts[d.id] || { skip: d.defaultSkip != null ? d.defaultSkip : d.labels.length > 1 ? 1 : 0 });
   const prompt = (d, c) => opt(d).skip ? c.q + '  ·  ' + c.a.slice(0, opt(d).skip).join(' / ') : c.q;
   const ans = (d, c) => c.a.slice(opt(d).skip);
-  const labels = d => d.labels.slice(opt(d).skip);
+  const labels = (d, c) => c && c.a.length > 1 && (c.q.match(/___/g) || []).length === c.a.length
+    ? c.a.map((_, k) => 'Lücke ' + (k + 1)).slice(opt(d).skip) : d.labels.slice(opt(d).skip);
   const ansText = (d, c) => ans(d, c).join(' – ');
   const mastered = d => cardsOf(base(d)).filter(c => sure(st(d, c))).length;
   const deckPct = d => { const n = base(d).cards.length; return n ? Math.round(mastered(d) / n * 100) : 0; };
@@ -290,10 +292,11 @@
     const tense = !own && DECKS.find(x => x.title === c.a[0] && x.info && x.info.kurz);   // "Zeitform erkennen": Antwort ist der Name einer Zeitform
     if (tense) out.push(tense.info.kurz + (tense.info.signals ? ' Signalwörter: ' + tense.info.signals : ''));
     const f = filled(d, c); if (f) out.push('Beispiel: ' + f);
-    if (!own && c.a.length === 1 && c.q.includes('___')) {   // Lückensatz: der ganze Satz und die Regel dazu
+    if (!own && c.q.includes('___')) {   // Jede Lücke erhält ihre eigene Antwort, Varianten bleiben pro Feld.
       const tag = (c.q.match(/\[([^\]]+)\]\s*$/) || [])[1];
-      const q = c.q.replace(/\s*\[[^\]]+\]\s*$/, '').replace(/___\s*\([^)]*\)/, '___');
-      out.push('Ganzer Satz: ' + q.replace('___', splitVar(c.a[0])[0]));
+      const q = c.q.replace(/\s*\[[^\]]+\]\s*$/, '').replace(/___\s*\([^)]*\)/g, '___');
+      let slot = 0;
+      out.push('Ganzer Satz: ' + q.replace(/___/g, () => splitVar(c.a[slot++] || '___')[0]));
       const rule = (tag && DECKS.find(x => x.title === tag && x.info && x.info.kurz)) || (b.info && b.info.kurz ? b : null);
       if (rule) out.push('Regel: ' + rule.info.kurz + (rule.info.tip ? ' Merke: ' + rule.info.tip : ''));
     }

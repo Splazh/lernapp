@@ -15,7 +15,7 @@
     n ? h('span', { class: 'count' }, (i + 1) + '/' + n) : '');
   let cur = null;   // Karte, die gerade gezeigt wird (fürs Vorlesen)
   const qcard = (d, c) => { cur = { d, c }; return h('div', { class: 'qcard' }, c.img ? h('img', { class: 'qimg', src: c.img, alt: 'Bild zur Frage' }) : '', h('div', { class: 'q' }, prompt(d, c)),
-    labels(d).length ? h('div', { class: 'ql' }, labels(d).join(' – ')) : ''); };
+    labels(d, c).length ? h('div', { class: 'ql' }, labels(d, c).join(' – ')) : ''); };
   // Vorlese-Knopf für Englisch und Spanisch (liest die Antwort in der Fremdsprache)
   const speakBtn = (d, c) => { const lang = LA.speakLang(d); return lang ? h('button', { class: 'speakbtn', type: 'button', 'aria-label': 'Antwort vorlesen', onclick: e => { e.stopPropagation(); LA.speak(ans(d, c).map(a => splitVar(a)[0]).join('. '), lang); } }, '🔊') : ''; };
   // Untere Leiste: Rückmeldung nach einer Antwort mit "Weiter".
@@ -61,7 +61,7 @@
   function flash(d, c, n, i, done) {
     const front = h('div', { class: 'face front' }, c.img ? h('img', { class: 'qimg', src: c.img, alt: 'Bild zur Frage' }) : '', h('div', { class: 'q' }, prompt(d, c)), h('div', { class: 'hint' }, 'Tippen zum Umdrehen'));
     const back = h('div', { class: 'face back' }, h('div', { class: 'hint' }, prompt(d, c)),
-      ans(d, c).flatMap((a, k) => [h('div', { class: 'lab' }, labels(d)[k] || ''), h('div', { class: 'val' }, a)]));
+      ans(d, c).flatMap((a, k) => [h('div', { class: 'lab' }, labels(d, c)[k] || ''), h('div', { class: 'val' }, a)]));
     const card = h('button', { class: 'flip', type: 'button' }, front, back);
     card.addEventListener('click', () => {
       if (card.classList.contains('turned')) return;
@@ -98,9 +98,10 @@
   function type(d, c, n, i, done) {
     const sol = ans(d, c);
     const inputs = sol.map(() => h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'done' }));
-    const fields = h('div', { class: 'fields' }, sol.map((s, k) => h('label', { class: 'field' }, h('span', null, labels(d)[k] || 'Antwort'), inputs[k])));
+    const fields = h('div', { class: 'fields' }, sol.map((s, k) => h('label', { class: 'field' }, h('span', null, labels(d, c)[k] || 'Antwort'), inputs[k])));
     let allOk = false;
     function check() {
+      if (inputs[0].readOnly) return;
       const res = inputs.map((inp, k) => fieldOk(inp.value, sol[k]));
       allOk = res.every(Boolean);
       inputs.forEach((inp, k) => {

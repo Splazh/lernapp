@@ -49,7 +49,7 @@
     ['I ___ (talk) to my best friend on the phone when you rang.', 'was talking', { w: ['talked', 'am talking', 'were talking'] }],
     ['Be quiet, please! The baby ___ (sleep).', 'is sleeping', { w: ['sleeps', 'was sleeping', 'sleep'] }],
     ['She usually ___ (have) dinner with her family at seven.', 'has', { w: ['is having', 'have', 'had'] }],
-    ['While Dad ___ (cook), the children ___ (set) the table.', 'was cooking / were setting', { w: ['cooked / set', 'is cooking / are setting', 'was cooking / set'] }],
+    ['While Dad ___ (cook), the children ___ (set) the table.', 'was cooking', 'were setting', { w: ['cooked – set', 'is cooking – are setting', 'was cooking – set'] }],
     ['Last July, my cousins ___ (visit) us for two weeks.', 'visited', { w: ['visit', 'were visiting', 'visits'] }],
     ['My brother is ___ (always/borrow) my clothes! It is so annoying.', 'always borrowing', { w: ['always borrows', 'always borrowed', 'always borrow'] }],
     ['At nine o\'clock last night I ___ (watch) a film with my parents.', 'was watching', { w: ['watched', 'am watching', 'watch'] }]
@@ -111,12 +111,12 @@
     tip: 'Nach did/didn\'t steht immer die Grundform: She didn\'t come, nicht "didn\'t came".'
   }, [
     ['Last summer my cousin ___ (live) with us for a month.', 'lived', { w: ['lives', 'was living', 'live'] }],
-    ['We ___ (share) a room and ___ (become) good friends.', 'shared / became', { w: ['shared / become', 'share / became', 'sharing / became'] }],
+    ['We ___ (share) a room and ___ (become) good friends.', 'shared', 'became', { w: ['shared – become', 'share – became', 'sharing – became'] }],
     ['He ___ (not/like) the new school at first.', "didn't like", { w: ["didn't liked", "wasn't like", "doesn't like"] }],
     ['The older boys ___ (make) fun of him every day.', 'made', { w: ['maked', 'make', 'were make'] }],
-    ['I ___ (try) to help him, but he ___ (not/want) to talk.', "tried / didn't want", { w: ["tryed / didn't want", "tried / didn't wanted", 'tried / not wanted'] }],
-    ['___ you ___ (tell) your parents about it?', 'Did / tell', { w: ['Did / told', 'Do / tell', 'Were / tell'] }],
-    ['In the end, a teacher ___ (find) out and ___ (stop) the bullying.', 'found / stopped', { w: ['finded / stopped', 'found / stoped', 'find / stopped'] }],
+    ['I ___ (try) to help him, but he ___ (not/want) to talk.', 'tried', "didn't want/did not want", { w: ["tryed – didn't want", "tried – didn't wanted", 'tried – not wanted'] }],
+    ['___ you ___ (tell) your parents about it?', 'Did', 'tell', { w: ['Did – told', 'Do – tell', 'Were – tell'] }],
+    ['In the end, a teacher ___ (find) out and ___ (stop) the bullying.', 'found', 'stopped', { w: ['finded – stopped', 'found – stoped', 'find – stopped'] }],
     ['Since then, the two of them ___ (get) on very well.', 'got', { w: ['get', 'getted', 'were getting'] }]
   ]);
 
